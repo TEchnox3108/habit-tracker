@@ -61,6 +61,113 @@ function auswahlGruppe(name, optionen, aktuell) {
   return `<div class="auswahl-gruppe" data-name="${esc(name)}" role="group">${knoepfe}</div>`;
 }
 
+// Wie auswahlGruppe, aber für Formulare (echte Auswahlfelder)
+function radioGruppe(name, optionen, aktuell) {
+  const knoepfe = optionen.map(o => `
+    <label class="auswahl-knopf">
+      <input type="radio" name="${esc(name)}" value="${esc(o.wert)}" ${String(o.wert) === String(aktuell) ? 'checked' : ''}>
+      ${o.icon ? icon(o.icon) : ''}<span>${esc(o.text)}</span>
+    </label>`).join('');
+  return `<div class="auswahl-gruppe" role="radiogroup">${knoepfe}</div>`;
+}
+
+// Ein-/Aus-Schalter mit Titel und kurzer Erklärung
+function schalter(name, titel, text, an) {
+  return `
+    <label class="schalter-zeile">
+      <span class="titel-text"><strong>${esc(titel)}</strong><small>${esc(text)}</small></span>
+      <input type="checkbox" class="schalter" name="${esc(name)}" ${an ? 'checked' : ''}>
+    </label>`;
+}
+
+// Zahl schön auf Deutsch anzeigen: 8000 → "8.000", 2.5 → "2,5"
+function zahl(wert) {
+  return Number(wert).toLocaleString('de-DE', { maximumFractionDigits: 2 });
+}
+
+// Liest eine eingetippte Zahl ("2,5", "8.000", "8000") – leer oder ungültig = null
+function zahlLesen(text) {
+  let t = String(text ?? '').trim().replace(/\s/g, '');
+  if (!t) return null;
+  if (t.includes(',')) t = t.replace(/\./g, '').replace(',', '.');   // 1.234,5 → 1234.5
+  else if (/^\d{1,3}(\.\d{3})+$/.test(t)) t = t.replace(/\./g, '');  // 8.000 → 8000
+  const wert = Number(t);
+  return Number.isFinite(wert) ? wert : null;
+}
+
+// Kurze Meldung unten am Bildschirm, z. B. "Gespeichert"
+function meldung(text) {
+  const el = document.createElement('div');
+  el.className = 'meldung';
+  el.setAttribute('role', 'status');
+  el.textContent = text;
+  document.body.appendChild(el);
+  setTimeout(() => el.classList.add('weg'), 1600);
+  setTimeout(() => el.remove(), 2000);
+}
+
+// Fenster, das von unten hochfährt (am Laptop: in der Mitte)
+const Dialog = {
+  element: null,
+
+  // Öffnet das Fenster mit Titel und Inhalt und gibt es zurück
+  oeffnen(titel, inhalt) {
+    if (!this.element) {
+      this.element = document.createElement('dialog');
+      this.element.className = 'blatt';
+      // Beim Öffnen das Fenster selbst fokussieren (nicht den Schließen-Knopf)
+      this.element.setAttribute('autofocus', '');
+      document.body.appendChild(this.element);
+      // Tipp auf den abgedunkelten Hintergrund schließt das Fenster
+      this.element.addEventListener('click', e => {
+        if (e.target === this.element) this.schliessen();
+      });
+    }
+    this.element.innerHTML = `
+      <div class="blatt-kopf">
+        <h2>${esc(titel)}</h2>
+        <button type="button" class="icon-knopf" data-schliessen aria-label="Schließen">${icon('x')}</button>
+      </div>
+      <div class="blatt-inhalt">${inhalt}</div>`;
+    this.element.querySelector('[data-schliessen]').addEventListener('click', () => this.schliessen());
+    iconsZeichnen();
+    if (!this.element.open) this.element.showModal();
+    return this.element;
+  },
+
+  schliessen() {
+    if (this.element && this.element.open) this.element.close();
+  }
+};
+
+// Sicherheitsabfrage. Ergibt true, wenn bestätigt wurde.
+// Verwendung: if (await bestaetigen('Wirklich löschen?')) { ... }
+function bestaetigen(text, knopfText = 'Löschen') {
+  return new Promise(fertig => {
+    const d = document.createElement('dialog');
+    d.className = 'blatt klein';
+    d.innerHTML = `
+      <div class="blatt-inhalt bestaetigung">
+        <p>${esc(text)}</p>
+        <div class="formular-knoepfe">
+          <button type="button" class="knopf zweit" data-antwort="nein">Abbrechen</button>
+          <button type="button" class="knopf warnung" data-antwort="ja">${esc(knopfText)}</button>
+        </div>
+      </div>`;
+    document.body.appendChild(d);
+    d.addEventListener('click', e => {
+      const knopf = e.target.closest('[data-antwort]');
+      if (knopf) d.close(knopf.dataset.antwort);
+      else if (e.target === d) d.close('nein');
+    });
+    d.addEventListener('close', () => {
+      fertig(d.returnValue === 'ja');
+      d.remove();
+    });
+    d.showModal();
+  });
+}
+
 // Fortschrittsring (prozent = 0 bis 100)
 function fortschrittsRing(prozent) {
   const radius = 50;
@@ -107,7 +214,8 @@ Design.anwenden();
 /* ---------- 3. Die Seiten ----------
    Jede Seite hat einen Titel und eine Funktion "anzeigen",
    die den Inhalt in ihren Bereich schreibt.
-   Die Seite "Einstellungen" steht in settings.js. */
+   Die Seite "Gewohnheiten" steht in habits.js,
+   die Seite "Einstellungen" in settings.js. */
 const Seiten = {
   heute: {
     titel: 'Heute',
@@ -133,16 +241,6 @@ const Seiten = {
         ${seitenKopf('Statistik', 'Deine Fortschritte auf einen Blick')}
         ${platzhalter('chart-column', 'Noch keine Statistiken',
           'In Phase 4 findest du hier Serien, einen Kalender und Diagramme.')}`;
-    }
-  },
-
-  gewohnheiten: {
-    titel: 'Gewohnheiten',
-    anzeigen(bereich) {
-      bereich.innerHTML = `
-        ${seitenKopf('Gewohnheiten', 'Kategorien und Gewohnheiten verwalten')}
-        ${platzhalter('list-checks', 'Bald geht’s los',
-          'In Phase 2 legst du hier Kategorien und Gewohnheiten an, änderst Farben und Icons und sortierst sie.')}`;
     }
   }
 };

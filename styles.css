@@ -340,10 +340,21 @@ svg.lucide {
   height: 17px;
 }
 
-.auswahl-knopf.aktiv {
+.auswahl-knopf.aktiv,
+.auswahl-knopf:has(input:checked) {
   background: var(--flaeche);
   color: var(--text);
   box-shadow: 0 0 0 1px var(--linie);
+}
+
+/* Bei Formularen steckt im Knopf ein unsichtbares Auswahlfeld */
+.auswahl-knopf {
+  position: relative;
+}
+
+.auswahl-knopf:has(input:focus-visible) {
+  outline: 2px solid var(--akzent);
+  outline-offset: 1px;
 }
 
 /* ---- Fortschrittsring ---- */
@@ -459,6 +470,595 @@ svg.lucide {
   text-align: center;
 }
 
+/* ---- Knöpfe ---- */
+.knopf {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--abstand-s);
+  min-height: 46px;
+  padding: 0 var(--abstand-xl);
+  border: 0;
+  border-radius: var(--rundung);
+  background: var(--akzent);
+  color: var(--auf-akzent);
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform var(--dauer-kurz) ease, background-color var(--dauer-kurz) ease;
+}
+
+.knopf:active {
+  transform: scale(0.98);
+}
+
+.knopf svg {
+  width: 18px;
+  height: 18px;
+}
+
+.knopf.zweit {
+  background: var(--flaeche-2);
+  color: var(--text);
+}
+
+.knopf.gefahr {
+  padding: 0 var(--abstand-m);
+  background: transparent;
+  color: var(--gefahr);
+}
+
+.knopf.warnung {
+  background: var(--gefahr);
+  color: var(--auf-akzent);
+}
+
+.knopf.gestrichelt {
+  background: transparent;
+  border: 1.5px dashed var(--linie);
+  color: var(--text-2);
+}
+
+.knopf.gestrichelt:hover {
+  border-color: var(--text-3);
+  color: var(--text);
+}
+
+.knopf.breit {
+  width: 100%;
+}
+
+/* Runder Knopf nur mit Icon (z. B. "Schließen") */
+.icon-knopf {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border: 0;
+  border-radius: var(--rundung-voll);
+  background: transparent;
+  color: var(--text-2);
+  cursor: pointer;
+}
+
+.icon-knopf:hover {
+  background: var(--flaeche-2);
+  color: var(--text);
+}
+
+.icon-knopf svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* ---- Hinweiszeile unter dem Seitentitel ---- */
+.seiten-hinweis {
+  display: flex;
+  gap: var(--abstand-s);
+  padding: 0 var(--abstand-xs);
+  color: var(--text-3);
+  font-size: var(--schrift-klein);
+}
+
+.seiten-hinweis svg {
+  width: 15px;
+  height: 15px;
+  margin-top: 2px;
+  vertical-align: -2px;
+}
+
+.seiten-hinweis span svg {
+  margin: 0;
+}
+
+/* ---- Karte als Link (z. B. in den Einstellungen) ---- */
+.link-karte {
+  display: flex;
+  align-items: center;
+  gap: var(--abstand-m);
+  padding-bottom: var(--abstand-l);
+  color: inherit;
+  text-decoration: none;
+}
+
+.link-karte > svg {
+  width: 20px;
+  height: 20px;
+  margin-left: auto;
+  color: var(--text-3);
+}
+
+/* ---- Titel + Untertitel nebeneinander mit Icon ---- */
+.titel-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.3;
+}
+
+.titel-text strong {
+  overflow: hidden;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.titel-text small {
+  margin-top: 2px;
+  color: var(--text-2);
+  font-size: var(--schrift-klein);
+}
+
+/* ---- Kategorien & Gewohnheiten (Seite "Gewohnheiten") ---- */
+.kategorie-liste {
+  display: flex;
+  flex-direction: column;
+  gap: var(--abstand-m);
+}
+
+.kategorie {
+  padding: var(--abstand-s) var(--abstand-s) var(--abstand-xs);
+}
+
+.kategorie-kopf,
+.gewohnheit-zeile {
+  display: flex;
+  align-items: center;
+}
+
+/* Griff zum Ziehen (⋮⋮) */
+.griff {
+  display: grid;
+  place-items: center;
+  align-self: stretch;
+  width: 30px;
+  color: var(--text-3);
+  cursor: grab;
+  touch-action: none;
+}
+
+.griff svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* Die ganze Zeile ist ein Knopf zum Bearbeiten */
+.zeilen-knopf {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: var(--abstand-m);
+  min-width: 0;
+  padding: var(--abstand-s) var(--abstand-s) var(--abstand-s) var(--abstand-xs);
+  border: 0;
+  border-radius: var(--rundung-klein);
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+
+.zeilen-knopf:hover {
+  background: var(--flaeche-2);
+}
+
+.zeilen-knopf .titel-text {
+  flex: 1;
+}
+
+.bearbeiten-zeichen,
+.ausgeblendet-zeichen {
+  display: grid;
+  color: var(--text-3);
+}
+
+.bearbeiten-zeichen svg,
+.ausgeblendet-zeichen svg {
+  width: 17px;
+  height: 17px;
+}
+
+.gewohnheit-liste {
+  min-height: 12px; /* damit man auch in leere Kategorien ziehen kann */
+  margin: var(--abstand-xs) 0 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--linie);
+}
+
+.gewohnheit-zeile {
+  border-bottom: 1px solid var(--linie);
+  background: var(--flaeche);
+}
+
+.icon-feld.klein {
+  width: 34px;
+  height: 34px;
+}
+
+.icon-feld.klein svg {
+  width: 17px;
+  height: 17px;
+}
+
+.neue-gewohnheit {
+  display: flex;
+  align-items: center;
+  gap: var(--abstand-s);
+  width: 100%;
+  padding: var(--abstand-m) var(--abstand-s) var(--abstand-m) 36px;
+  border: 0;
+  border-radius: var(--rundung-klein);
+  background: transparent;
+  color: var(--text-2);
+  font-size: var(--schrift-klein);
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.neue-gewohnheit:hover {
+  color: var(--text);
+}
+
+.neue-gewohnheit svg {
+  width: 17px;
+  height: 17px;
+  color: var(--kat);
+}
+
+/* Ausgeblendetes wird blasser angezeigt */
+.ist-ausgeblendet .icon-feld,
+.ist-ausgeblendet .titel-text {
+  opacity: 0.45;
+}
+
+/* Beim Ziehen */
+.zieh-geist {
+  opacity: 0.35;
+}
+
+.zieh-gewaehlt {
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+}
+
+/* ---- Fenster (Dialog), das von unten hochfährt ---- */
+dialog.blatt {
+  width: 100%;
+  max-width: 100%;
+  max-height: 92vh;
+  margin: auto 0 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--rundung-gross) var(--rundung-gross) 0 0;
+  background: var(--flaeche);
+  color: var(--text);
+  overflow: hidden;
+  outline: none;
+}
+
+dialog.blatt[open] {
+  display: flex;
+  flex-direction: column;
+  animation: blatt-rein var(--dauer) var(--kurve);
+}
+
+dialog.blatt::backdrop {
+  background: rgba(20, 18, 15, 0.4);
+}
+
+@keyframes blatt-rein {
+  from { transform: translateY(40px); opacity: 0; }
+  to   { transform: none; opacity: 1; }
+}
+
+.blatt-kopf {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--abstand-m) var(--abstand-m) var(--abstand-xs) var(--abstand-l);
+}
+
+.blatt-kopf h2 {
+  font-size: var(--schrift-gross);
+  font-weight: 600;
+}
+
+.blatt-inhalt {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--abstand-s) var(--abstand-l) calc(var(--abstand-xl) + env(safe-area-inset-bottom));
+}
+
+.bestaetigung {
+  padding-top: var(--abstand-xl);
+}
+
+.bestaetigung p {
+  margin-bottom: var(--abstand-xl);
+}
+
+.bestaetigung .formular-knoepfe .knopf {
+  flex: 1;
+}
+
+/* ---- Formulare ---- */
+.formular {
+  display: flex;
+  flex-direction: column;
+  gap: var(--abstand-xl);
+}
+
+.feld {
+  display: flex;
+  flex-direction: column;
+  gap: var(--abstand-s);
+  min-width: 0;
+}
+
+.feld-titel {
+  color: var(--text-2);
+  font-size: var(--schrift-klein);
+  font-weight: 600;
+}
+
+.hinweis {
+  color: var(--text-3);
+  font-size: 0.75rem;
+}
+
+.eingabe {
+  width: 100%;
+  min-height: 46px;
+  padding: 0 var(--abstand-m);
+  border: 1px solid var(--linie);
+  border-radius: var(--rundung);
+  background: var(--hintergrund);
+  color: var(--text);
+  font: inherit;
+  font-size: 16px; /* verhindert das automatische Hineinzoomen am iPhone */
+}
+
+.eingabe:focus {
+  outline: none;
+  border-color: var(--akzent);
+}
+
+.eingabe::placeholder {
+  color: var(--text-3);
+}
+
+.feld-reihe {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--abstand-m);
+}
+
+.anzahl-zeile {
+  display: flex;
+  align-items: center;
+  gap: var(--abstand-m);
+  color: var(--text-2);
+}
+
+.anzahl-zeile .eingabe {
+  width: 88px;
+  text-align: center;
+}
+
+/* Unsichtbare Auswahlfelder (man klickt auf das, was daneben gezeichnet ist) */
+.auswahl-knopf input,
+.farb-punkt input,
+.icon-option input,
+.tag-chip input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Farbtupfer */
+.farb-auswahl {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--abstand-s);
+}
+
+.farb-punkt {
+  position: relative;
+  cursor: pointer;
+}
+
+.farb-punkt span {
+  display: block;
+  width: 34px;
+  height: 34px;
+  border-radius: var(--rundung-voll);
+  background: var(--kat);
+  transition: box-shadow var(--dauer-kurz) ease;
+}
+
+.farb-punkt input:checked + span {
+  box-shadow: 0 0 0 3px var(--flaeche), 0 0 0 5px var(--kat);
+}
+
+.farb-punkt input:focus-visible + span,
+.icon-option input:focus-visible + .icon-feld,
+.tag-chip input:focus-visible + span {
+  outline: 2px solid var(--text);
+  outline-offset: 2px;
+}
+
+/* Icon-Raster */
+.icon-auswahl {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(44px, 1fr));
+  gap: var(--abstand-xs);
+  max-height: 188px;
+  padding: var(--abstand-s);
+  overflow-y: auto;
+  border: 1px solid var(--linie);
+  border-radius: var(--rundung);
+}
+
+.icon-option {
+  position: relative;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+
+.icon-option .icon-feld {
+  width: 42px;
+  height: 42px;
+  background: transparent;
+  color: var(--text-2);
+}
+
+.icon-option input:checked + .icon-feld {
+  background: color-mix(in srgb, var(--kat) var(--toenung), transparent);
+  color: var(--kat);
+  box-shadow: inset 0 0 0 1.5px var(--kat);
+}
+
+/* Wochentage */
+.wochentage {
+  display: flex;
+  gap: var(--abstand-xs);
+}
+
+.tag-chip {
+  position: relative;
+  flex: 1;
+  cursor: pointer;
+}
+
+.tag-chip span {
+  display: grid;
+  place-items: center;
+  height: 40px;
+  border-radius: var(--rundung-klein);
+  background: var(--flaeche-2);
+  color: var(--text-2);
+  font-size: var(--schrift-klein);
+  font-weight: 600;
+  transition: background-color var(--dauer-kurz) ease, color var(--dauer-kurz) ease;
+}
+
+.tag-chip input:checked + span {
+  background: var(--kat);
+  color: #fff;
+}
+
+/* Ein-/Aus-Schalter */
+.schalter-zeile {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--abstand-l);
+  padding: var(--abstand-m) var(--abstand-l);
+  border-radius: var(--rundung);
+  background: var(--flaeche-2);
+  cursor: pointer;
+}
+
+.schalter-zeile .titel-text strong {
+  white-space: normal;
+}
+
+input.schalter {
+  position: relative;
+  flex-shrink: 0;
+  width: 46px;
+  height: 28px;
+  margin: 0;
+  border-radius: var(--rundung-voll);
+  background: var(--linie);
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+  transition: background-color var(--dauer) var(--kurve);
+}
+
+input.schalter::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 22px;
+  height: 22px;
+  border-radius: var(--rundung-voll);
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+  transition: transform var(--dauer) var(--kurve);
+}
+
+input.schalter:checked {
+  background: var(--akzent);
+}
+
+input.schalter:checked::after {
+  transform: translateX(18px);
+}
+
+.formular-knoepfe {
+  display: flex;
+  gap: var(--abstand-s);
+}
+
+.formular-knoepfe .knopf[type="submit"] {
+  flex: 1;
+}
+
+.fehler {
+  color: var(--gefahr);
+  font-size: var(--schrift-klein);
+  font-weight: 500;
+}
+
+/* ---- Kurze Meldung unten ("Gespeichert") ---- */
+.meldung {
+  position: fixed;
+  left: 50%;
+  bottom: calc(var(--navi-hoehe) + env(safe-area-inset-bottom) + var(--abstand-l));
+  z-index: 50;
+  padding: 10px 18px;
+  border-radius: var(--rundung-voll);
+  background: var(--text);
+  color: var(--hintergrund);
+  font-size: var(--schrift-klein);
+  font-weight: 500;
+  transform: translateX(-50%);
+  animation: meldung-rein var(--dauer) var(--kurve);
+  transition: opacity 300ms ease;
+}
+
+.meldung.weg {
+  opacity: 0;
+}
+
+@keyframes meldung-rein {
+  from { opacity: 0; transform: translate(-50%, 8px); }
+  to   { opacity: 1; transform: translate(-50%, 0); }
+}
+
 /* Für Menschen, die in ihrem Gerät "weniger Bewegung" eingestellt haben */
 @media (prefers-reduced-motion: reduce) {
   *,
@@ -515,6 +1115,23 @@ svg.lucide {
   .navi-icon {
     width: 38px;
     height: 34px;
+  }
+
+  /* Fenster in der Mitte statt von unten */
+  dialog.blatt {
+    max-width: 520px;
+    max-height: 86vh;
+    margin: auto;
+    border-radius: var(--rundung-gross);
+  }
+
+  dialog.blatt.klein {
+    max-width: 400px;
+  }
+
+  .meldung {
+    bottom: var(--abstand-xl);
+    left: calc(50% + var(--seitenleiste-breite) / 2);
   }
 
   .inhalt {

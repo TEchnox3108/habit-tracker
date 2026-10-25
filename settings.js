@@ -4,6 +4,7 @@
    Hier kannst du:
    - Hell/Dunkel umschalten
    - den Wochenstart festlegen
+   - zur Verwaltung der Kategorien & Gewohnheiten springen
    - die Farbpalette ansehen
    (Export/Import und Zurücksetzen kommen in Phase 5.)
    ========================================================= */
@@ -47,6 +48,15 @@ Seiten.einstellungen = {
           { wert: 0, text: 'Sonntag' }
         ], e.wochenstart)}
       </section>
+
+      <a class="karte link-karte" href="#gewohnheiten">
+        <span class="icon-feld">${icon('list-checks')}</span>
+        <span class="titel-text">
+          <strong>Kategorien & Gewohnheiten</strong>
+          <small>Anlegen, bearbeiten, sortieren, ausblenden</small>
+        </span>
+        ${icon('chevron-right')}
+      </a>
 
       <section class="karte">
         <h2 class="karten-titel">Farbpalette</h2>
