@@ -1,0 +1,525 @@
+/* =========================================================
+   styles.css – So sieht die App aus
+
+   Aufbau dieser Datei:
+   1. DESIGN-EINSTELLUNGEN  ← Hier änderst du Farben, Schrift, Abstände
+   2. Grundlagen
+   3. Navigation
+   4. Seiten-Bausteine (Karten, Knöpfe, Icons ...)
+   5. Anpassungen für den Laptop
+   ========================================================= */
+
+
+/* =========================================================
+   1. DESIGN-EINSTELLUNGEN
+   Alles, was das Aussehen bestimmt, steht hier an EINER Stelle.
+   ========================================================= */
+:root {
+  /* ---- Schrift ---- */
+  --schrift: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --schrift-klein: 0.8125rem;   /* 13px – kleine Hinweise */
+  --schrift-normal: 0.9375rem;  /* 15px – normaler Text */
+  --schrift-gross: 1.0625rem;   /* 17px – Überschriften in Karten */
+  --schrift-titel: 1.625rem;    /* 26px – Seitentitel */
+
+  /* ---- Abstände ---- */
+  --abstand-xs: 4px;
+  --abstand-s: 8px;
+  --abstand-m: 12px;
+  --abstand-l: 16px;
+  --abstand-xl: 24px;
+  --abstand-xxl: 36px;
+
+  /* ---- Rundungen der Ecken ---- */
+  --rundung-klein: 10px;
+  --rundung: 16px;
+  --rundung-gross: 20px;
+  --rundung-voll: 999px;
+
+  /* ---- Animationen ---- */
+  --dauer-kurz: 150ms;
+  --dauer: 260ms;
+  --kurve: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  /* ---- Maße ---- */
+  --navi-hoehe: 64px;           /* Höhe der unteren Leiste am Handy */
+  --seitenleiste-breite: 232px; /* Breite der linken Leiste am Laptop */
+  --inhalt-breite: 640px;       /* maximale Breite des Inhalts */
+
+  /* ---- Kategorie-Farben (matt & gedämpft) ----
+     Jede Kategorie bekommt eine dieser Farben.
+     Neue Farbe? Hier eintragen UND in config.js bei "farben" ergänzen. */
+  --farbe-salbei: #7e9c85;
+  --farbe-terrakotta: #c2785b;
+  --farbe-staubblau: #6e8dad;
+  --farbe-sand: #bf9f72;
+  --farbe-pflaume: #8c6889;
+  --farbe-ocker: #c09538;
+  --farbe-moos: #74844f;
+  --farbe-rose: #bf8790;
+  --farbe-petrol: #4e8789;
+  --farbe-lavendel: #8e86b3;
+  --farbe-ton: #a0735c;
+  --farbe-schiefer: #6c7684;
+  --farbe-koralle: #cc8670;
+  --farbe-minze: #72a493;
+
+  /* Wie stark die runden Icon-Felder eingefärbt sind (0% = gar nicht) */
+  --toenung: 15%;
+
+  /* ---- Farben im HELLEN Modus ---- */
+  --hintergrund: #f6f4ef;   /* Seitenhintergrund (warmes Off-White) */
+  --flaeche: #ffffff;       /* Karten */
+  --flaeche-2: #eeebe4;     /* leicht abgesetzte Flächen */
+  --linie: #e5e1d8;         /* feine Trennlinien */
+  --text: #2b2a27;          /* Haupttext */
+  --text-2: #6d6962;        /* Nebentext */
+  --text-3: #9d988f;        /* ganz leiser Text */
+  --akzent: var(--farbe-salbei);  /* Hauptfarbe der App */
+  --akzent-text: #557360;   /* Akzentfarbe für Schrift (etwas dunkler, gut lesbar) */
+  --auf-akzent: #ffffff;    /* Schrift auf akzentfarbigen Knöpfen */
+  --gefahr: #b4614b;        /* für "Löschen" & Warnungen */
+  --schatten: 0 1px 2px rgba(45, 38, 25, 0.04);
+  color-scheme: light;
+}
+
+/* ---- Farben im DUNKLEN Modus ----
+   app.js setzt data-theme="dark", wenn Dunkel gewählt ist
+   (oder "System" und das Handy/der Laptop gerade dunkel ist). */
+:root[data-theme="dark"] {
+  --hintergrund: #191a19;
+  --flaeche: #222422;
+  --flaeche-2: #2b2e2b;
+  --linie: #323532;
+  --text: #e8e6e1;
+  --text-2: #a7a39b;
+  --text-3: #75726c;
+  --akzent-text: #a3c2ab;
+  --auf-akzent: #161816;
+  --gefahr: #d1836d;
+  --toenung: 20%;
+  --schatten: none;
+  color-scheme: dark;
+}
+
+
+/* =========================================================
+   2. Grundlagen
+   ========================================================= */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--hintergrund);
+  color: var(--text);
+  font-family: var(--schrift);
+  font-size: var(--schrift-normal);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color var(--dauer) ease, color var(--dauer) ease;
+}
+
+h1, h2, h3, p {
+  margin: 0;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+}
+
+/* Sichtbarer Rahmen, wenn man mit der Tastatur bedient */
+:focus-visible {
+  outline: 2px solid var(--akzent);
+  outline-offset: 2px;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+/* Icons haben immer eine einheitliche Strichstärke */
+svg.lucide {
+  stroke-width: 2;
+  flex-shrink: 0;
+}
+
+
+/* =========================================================
+   3. Navigation (am Handy: Leiste unten)
+   ========================================================= */
+.navigation {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 20;
+  display: flex;
+  justify-content: space-around;
+  height: calc(var(--navi-hoehe) + env(safe-area-inset-bottom));
+  padding-bottom: env(safe-area-inset-bottom);
+  background: var(--flaeche);
+  border-top: 1px solid var(--linie);
+}
+
+/* Logo-Zeile – nur am Laptop sichtbar */
+.navigation-marke {
+  display: none;
+}
+
+.navi-punkt {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  color: var(--text-3);
+  text-decoration: none;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  transition: color var(--dauer-kurz) ease;
+}
+
+.navi-icon {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 30px;
+  border-radius: var(--rundung-voll);
+  transition: background-color var(--dauer) var(--kurve);
+}
+
+.navi-icon svg {
+  width: 21px;
+  height: 21px;
+}
+
+.navi-punkt.aktiv {
+  color: var(--text);
+}
+
+.navi-punkt.aktiv .navi-icon {
+  color: var(--akzent-text);
+  background: color-mix(in srgb, var(--akzent) var(--toenung), transparent);
+}
+
+
+/* =========================================================
+   4. Seiten-Bausteine
+   ========================================================= */
+.inhalt {
+  max-width: var(--inhalt-breite);
+  margin: 0 auto;
+  padding: var(--abstand-xl) var(--abstand-l);
+  padding-top: calc(var(--abstand-xl) + env(safe-area-inset-top));
+  padding-bottom: calc(var(--navi-hoehe) + env(safe-area-inset-bottom) + var(--abstand-xl));
+}
+
+.seite {
+  display: flex;
+  flex-direction: column;
+  gap: var(--abstand-l);
+  animation: einblenden var(--dauer) var(--kurve);
+}
+
+@keyframes einblenden {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* ---- Seitenkopf (Titel + Untertitel) ---- */
+.seiten-kopf {
+  padding: var(--abstand-s) var(--abstand-xs) var(--abstand-xs);
+}
+
+.seiten-kopf h1 {
+  font-size: var(--schrift-titel);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.seiten-kopf p {
+  margin-top: var(--abstand-xs);
+  color: var(--text-2);
+}
+
+/* ---- Karte (weiße Fläche mit feiner Linie) ---- */
+.karte {
+  background: var(--flaeche);
+  border: 1px solid var(--linie);
+  border-radius: var(--rundung-gross);
+  padding: var(--abstand-l) var(--abstand-l) var(--abstand-xl);
+  box-shadow: var(--schatten);
+}
+
+.karten-titel {
+  font-size: var(--schrift-gross);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.karten-text {
+  margin-top: var(--abstand-xs);
+  color: var(--text-2);
+  font-size: var(--schrift-klein);
+}
+
+.karte > * + .auswahl-gruppe,
+.karte > * + .farb-raster {
+  margin-top: var(--abstand-l);
+}
+
+/* ---- Rundes, eingefärbtes Icon-Feld ----
+   Die Farbe kommt von der Variable --kat (z. B. style="--kat: var(--farbe-salbei)"). */
+.icon-feld {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--rundung-voll);
+  color: var(--kat, var(--akzent));
+  background: color-mix(in srgb, var(--kat, var(--akzent)) var(--toenung), transparent);
+  flex-shrink: 0;
+}
+
+.icon-feld svg {
+  width: 20px;
+  height: 20px;
+}
+
+.icon-feld.gross {
+  width: 56px;
+  height: 56px;
+}
+
+.icon-feld.gross svg {
+  width: 26px;
+  height: 26px;
+}
+
+/* ---- Auswahl-Knöpfe nebeneinander (z. B. System / Hell / Dunkel) ---- */
+.auswahl-gruppe {
+  display: flex;
+  gap: var(--abstand-xs);
+  padding: var(--abstand-xs);
+  background: var(--flaeche-2);
+  border-radius: var(--rundung);
+}
+
+.auswahl-knopf {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--abstand-s);
+  min-height: 42px;
+  padding: var(--abstand-s) var(--abstand-m);
+  border: 0;
+  border-radius: var(--rundung-klein);
+  background: transparent;
+  color: var(--text-2);
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color var(--dauer-kurz) ease, color var(--dauer-kurz) ease;
+}
+
+.auswahl-knopf svg {
+  width: 17px;
+  height: 17px;
+}
+
+.auswahl-knopf.aktiv {
+  background: var(--flaeche);
+  color: var(--text);
+  box-shadow: 0 0 0 1px var(--linie);
+}
+
+/* ---- Fortschrittsring ---- */
+.ring-karte {
+  display: flex;
+  align-items: center;
+  gap: var(--abstand-xl);
+  padding-bottom: var(--abstand-l);
+}
+
+.ring {
+  position: relative;
+  width: 112px;
+  height: 112px;
+  flex-shrink: 0;
+}
+
+.ring svg {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.ring circle {
+  fill: none;
+  stroke-width: 10;
+}
+
+.ring-spur {
+  stroke: var(--flaeche-2);
+}
+
+.ring-balken {
+  stroke: var(--akzent);
+  stroke-linecap: round;
+  transition: stroke-dashoffset 600ms var(--kurve);
+}
+
+.ring-text {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  line-height: 1.1;
+}
+
+.ring-text strong {
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.ring-text span {
+  color: var(--text-3);
+  font-size: 0.75rem;
+}
+
+/* ---- Leerer Zustand / Platzhalter ---- */
+.leer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--abstand-s);
+  padding: var(--abstand-xxl) var(--abstand-l);
+  text-align: center;
+}
+
+.leer .icon-feld {
+  margin-bottom: var(--abstand-s);
+}
+
+.leer p {
+  max-width: 34ch;
+  color: var(--text-2);
+  font-size: var(--schrift-klein);
+}
+
+/* ---- Farbpalette (Vorschau in den Einstellungen) ---- */
+.farb-raster {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
+  gap: var(--abstand-s);
+}
+
+.farb-muster {
+  display: flex;
+  align-items: center;
+  gap: var(--abstand-m);
+  padding: var(--abstand-s);
+  border-radius: var(--rundung);
+  background: var(--flaeche-2);
+  font-size: var(--schrift-klein);
+  font-weight: 500;
+}
+
+.farb-muster .icon-feld {
+  width: 34px;
+  height: 34px;
+  background: color-mix(in srgb, var(--kat) var(--toenung), var(--flaeche));
+}
+
+.farb-muster .icon-feld svg {
+  width: 17px;
+  height: 17px;
+}
+
+.fusszeile {
+  padding: var(--abstand-s);
+  color: var(--text-3);
+  font-size: 0.75rem;
+  text-align: center;
+}
+
+/* Für Menschen, die in ihrem Gerät "weniger Bewegung" eingestellt haben */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    transition-duration: 1ms !important;
+  }
+}
+
+
+/* =========================================================
+   5. Anpassungen für den Laptop (breite Bildschirme)
+   Die Navigation wandert nach links.
+   ========================================================= */
+@media (min-width: 900px) {
+  .navigation {
+    top: 0;
+    right: auto;
+    width: var(--seitenleiste-breite);
+    height: auto;
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: var(--abstand-xs);
+    padding: var(--abstand-xl) var(--abstand-m);
+    border-top: 0;
+    border-right: 1px solid var(--linie);
+  }
+
+  .navigation-marke {
+    display: flex;
+    align-items: center;
+    gap: var(--abstand-m);
+    padding: 0 var(--abstand-s) var(--abstand-xl);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+
+  .navi-punkt {
+    flex: 0;
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: var(--abstand-s);
+    padding: var(--abstand-xs);
+    border-radius: var(--rundung);
+    font-size: var(--schrift-normal);
+    color: var(--text-2);
+  }
+
+  .navi-punkt:hover {
+    background: var(--flaeche-2);
+  }
+
+  .navi-icon {
+    width: 38px;
+    height: 34px;
+  }
+
+  .inhalt {
+    margin-left: calc(var(--seitenleiste-breite) + max(0px, (100vw - var(--seitenleiste-breite) - var(--inhalt-breite)) / 2 - 8px));
+    padding-top: var(--abstand-xxl);
+    padding-bottom: var(--abstand-xxl);
+  }
+}

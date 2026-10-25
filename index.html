@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Habit Tracker</title>
+  <!-- Farbe der Browser-Leiste am Handy (wird von app.js an Hell/Dunkel angepasst) -->
+  <meta name="theme-color" content="#f6f4ef">
+
+  <!-- Schrift "Inter" von Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+
+  <!-- Unser Aussehen (Farben, Abstände, Schriften stehen ganz oben in styles.css) -->
+  <link rel="stylesheet" href="styles.css">
+
+  <!-- Icons (Lucide) aus dem Internet -->
+  <script defer src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+
+  <!-- Unsere eigenen Programm-Dateien. Die Reihenfolge ist wichtig! -->
+  <script src="config.js"></script>   <!-- Grundeinstellungen & Startdaten -->
+  <script src="data.js"></script>     <!-- Speichern & Laden im Browser -->
+  <script src="app.js"></script>      <!-- Navigation, Design, Seiten -->
+  <script src="settings.js"></script> <!-- Seite "Einstellungen" -->
+</head>
+<body>
+  <div class="app">
+
+    <!-- Navigation: am Handy unten, am Laptop links -->
+    <nav class="navigation" aria-label="Hauptnavigation">
+      <div class="navigation-marke">
+        <span class="icon-feld"><i data-lucide="sprout"></i></span>
+        <span>Habit Tracker</span>
+      </div>
+      <a class="navi-punkt" href="#heute" data-seite="heute">
+        <span class="navi-icon"><i data-lucide="sun"></i></span>
+        <span class="navi-text">Heute</span>
+      </a>
+      <a class="navi-punkt" href="#statistik" data-seite="statistik">
+        <span class="navi-icon"><i data-lucide="chart-column"></i></span>
+        <span class="navi-text">Statistik</span>
+      </a>
+      <a class="navi-punkt" href="#gewohnheiten" data-seite="gewohnheiten">
+        <span class="navi-icon"><i data-lucide="list-checks"></i></span>
+        <span class="navi-text">Gewohnheiten</span>
+      </a>
+      <a class="navi-punkt" href="#einstellungen" data-seite="einstellungen">
+        <span class="navi-icon"><i data-lucide="settings"></i></span>
+        <span class="navi-text">Einstellungen</span>
+      </a>
+    </nav>
+
+    <!-- Hier erscheinen die vier Seiten. Immer nur eine ist sichtbar. -->
+    <main class="inhalt">
+      <section class="seite" id="seite-heute" data-seite="heute"></section>
+      <section class="seite" id="seite-statistik" data-seite="statistik" hidden></section>
+      <section class="seite" id="seite-gewohnheiten" data-seite="gewohnheiten" hidden></section>
+      <section class="seite" id="seite-einstellungen" data-seite="einstellungen" hidden></section>
+    </main>
+
+  </div>
+</body>
+</html>
