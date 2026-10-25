@@ -69,6 +69,10 @@ Matt und ruhig: keine Verläufe, kein Glanz, keine Neonfarben; gedämpfte Palett
 4. ✅ Statistik: Streaks, Heatmap, Wochen/Monat pro Kategorie, Chart.js-Diagramme, Erfolgsquote
 5. ✅ Export/Import (JSON), Zurücksetzen, PWA (manifest + sw.js), Feinschliff (bis 320px Breite getestet), README.md
 
-Offen: Hochladen ins Internet (GitHub Pages oder Netlify) braucht ein Konto des Nutzers – das legt der Nutzer selbst an; Claude kann danach per Git hochladen.
+## Veröffentlichung (GitHub Pages)
+- Repo: https://github.com/TEchnox3108/habit-tracker (öffentlich, Branch `main`), live unter https://technox3108.github.io/habit-tracker/
+- Commits nur mit der GitHub-noreply-Adresse (`git config user.email` ist gesetzt) – die private E-Mail des Nutzers soll nicht öffentlich werden.
+- `git push` klappt nicht aus Claudes eigener Shell (die Anmeldung kann sich dort nicht öffnen) → im Terminal-Bereich des Nutzers ausführen: `& 'C:\Program Files\Git\cmd\git.exe' push`.
+- Vor jedem Hochladen `VERSION` in `sw.js` erhöhen.
 
 Mit dem Nutzer vereinbarte Regeln: „Vermeide ich“-Gewohnheit abgehakt = heute vermieden (Erfolg). „X-mal pro Woche“ erscheint täglich, bis das Wochenziel erreicht ist. Zähler/Zahl erledigt bei erreichtem Tagesziel, ohne Ziel bei Wert > 0. Nicht fällige Tage unterbrechen Serien nicht. „Stimmung“ = Zahl 1–5. Nachtragen nur für vergangene Tage, nicht für die Zukunft.
