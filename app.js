@@ -3,7 +3,7 @@
 
    Inhalt:
    1. Kleine Helfer (Icons, Texte, Bausteine)
-   2. Dark/Light Mode
+   2. Dark/Light Mode (+ 2b. Handy-App / PWA)
    3. Verzeichnis der Seiten
    4. Navigation zwischen den Seiten
    5. Start der App
@@ -155,15 +155,22 @@ function bestaetigen(text, knopfText = 'Löschen') {
         </div>
       </div>`;
     document.body.appendChild(d);
+
+    // Antwort genau einmal weitergeben und das Fenster entfernen
+    let beantwortet = false;
+    const antworten = ja => {
+      if (beantwortet) return;
+      beantwortet = true;
+      if (d.open) d.close();
+      d.remove();
+      fertig(ja);
+    };
     d.addEventListener('click', e => {
       const knopf = e.target.closest('[data-antwort]');
-      if (knopf) d.close(knopf.dataset.antwort);
-      else if (e.target === d) d.close('nein');
+      if (knopf) antworten(knopf.dataset.antwort === 'ja');
+      else if (e.target === d) antworten(false);
     });
-    d.addEventListener('close', () => {
-      fertig(d.returnValue === 'ja');
-      d.remove();
-    });
+    d.addEventListener('close', () => antworten(false)); // z. B. mit der Esc-Taste geschlossen
     d.showModal();
   });
 }
@@ -215,6 +222,61 @@ Design.systemDunkel.addEventListener('change', () => Design.anwenden());
 
 // Sofort beim Laden anwenden, damit die Seite nicht kurz hell aufblitzt
 Design.anwenden();
+
+
+/* ---------- 2b. Handy-App (PWA) ----------
+   Damit man die App installieren kann und sie offline läuft.
+   Das funktioniert nur, wenn sie über eine Internetadresse (https://)
+   geöffnet wird – nicht per Doppelklick auf die Datei. */
+const PWA = {
+  aufforderung: null, // vom Browser angebotene Installation (Android/Chrome/Edge)
+
+  // Über eine echte Adresse geöffnet (nicht als Datei)?
+  istOnline() {
+    return location.protocol === 'https:' || location.protocol === 'http:';
+  },
+
+  // Läuft die App gerade als installierte App?
+  istInstalliert() {
+    return window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+  },
+
+  start() {
+    if (!this.istOnline()) return; // als Datei geöffnet: nichts zu tun
+
+    // App-Beschreibung (Name, Icons, Farben) für den Browser einbinden
+    const manifest = document.createElement('link');
+    manifest.rel = 'manifest';
+    manifest.href = 'manifest.webmanifest';
+    document.head.appendChild(manifest);
+
+    // Service Worker: speichert die App-Dateien, damit sie offline startet
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js').catch(fehler => console.warn('Service Worker:', fehler));
+    }
+
+    // Der Browser bietet eine Installation an → merken und in den Einstellungen anzeigen
+    window.addEventListener('beforeinstallprompt', e => {
+      e.preventDefault();
+      this.aufforderung = e;
+      if (Navigation.aktuelle === 'einstellungen') Navigation.zeigen();
+    });
+    window.addEventListener('appinstalled', () => {
+      this.aufforderung = null;
+      meldung('App installiert');
+    });
+  },
+
+  async installieren() {
+    if (!this.aufforderung) return;
+    this.aufforderung.prompt();
+    await this.aufforderung.userChoice;
+    this.aufforderung = null;
+    Navigation.zeigen();
+  }
+};
+
+PWA.start();
 
 
 /* ---------- 3. Die Seiten ----------

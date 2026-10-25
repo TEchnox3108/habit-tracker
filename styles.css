@@ -323,9 +323,10 @@ svg.lucide {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: var(--abstand-s);
+  gap: 6px;
+  min-width: 0;
   min-height: 42px;
-  padding: var(--abstand-s) var(--abstand-m);
+  padding: var(--abstand-s);
   border: 0;
   border-radius: var(--rundung-klein);
   background: transparent;
@@ -1670,6 +1671,48 @@ button.heute-haupt {
   font-size: 0.75rem;
 }
 
+/* ---- Einstellungen: Daten & Installieren ---- */
+.aktionen-liste {
+  display: flex;
+  flex-direction: column;
+  margin: var(--abstand-m) calc(var(--abstand-s) * -1) 0;
+}
+
+.aktion-zeile + .aktion-zeile {
+  border-top: 1px solid var(--linie);
+  border-radius: 0;
+}
+
+.aktion-zeile > svg {
+  width: 17px;
+  height: 17px;
+  color: var(--text-3);
+}
+
+.aktion-zeile.gefahr {
+  --kat: var(--gefahr);
+}
+
+.aktion-zeile.gefahr strong {
+  color: var(--gefahr);
+}
+
+.karte > .karten-titel + .karten-text + .knopf {
+  margin-top: var(--abstand-l);
+}
+
+.hinweis-gut {
+  display: flex;
+  align-items: center;
+  gap: var(--abstand-s);
+}
+
+.hinweis-gut svg {
+  width: 16px;
+  height: 16px;
+  color: var(--akzent-text);
+}
+
 /* ---- Kurze Meldung unten ("Gespeichert") ---- */
 .meldung {
   position: fixed;
@@ -1694,6 +1737,62 @@ button.heute-haupt {
 @keyframes meldung-rein {
   from { opacity: 0; transform: translate(-50%, 8px); }
   to   { opacity: 1; transform: translate(-50%, 0); }
+}
+
+/* Sehr schmale Handys: Bedienelemente etwas kompakter, damit die Namen Platz haben */
+@media (max-width: 370px) {
+  .inhalt {
+    padding-left: var(--abstand-m);
+    padding-right: var(--abstand-m);
+  }
+
+  .heute-liste {
+    padding: 0 var(--abstand-s);
+  }
+
+  .heute-haupt {
+    gap: var(--abstand-s);
+  }
+
+  .heute-zeile .icon-feld {
+    width: 34px;
+    height: 34px;
+  }
+
+  .heute-zeile .icon-feld svg {
+    width: 17px;
+    height: 17px;
+  }
+
+  .notiz-knopf {
+    width: 28px;
+  }
+
+  .zaehler-knopf {
+    width: 28px;
+    height: 28px;
+  }
+
+  .zaehler-wert {
+    min-width: 20px;
+  }
+
+  .eingabe.zahl-feld {
+    width: 64px;
+  }
+
+  .zeilen-balken {
+    left: 42px;
+  }
+
+  .ring-karte {
+    gap: var(--abstand-l);
+  }
+
+  .ring {
+    width: 96px;
+    height: 96px;
+  }
 }
 
 /* Für Menschen, die in ihrem Gerät "weniger Bewegung" eingestellt haben */

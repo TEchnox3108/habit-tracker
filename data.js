@@ -21,8 +21,9 @@ const Daten = {
     return {
       version: 1,
       einstellungen: {
-        design: 'system', // 'system', 'hell' oder 'dunkel'
-        wochenstart: 1    // 1 = Montag, 0 = Sonntag
+        design: 'system',    // 'system', 'hell' oder 'dunkel'
+        wochenstart: 1,      // 1 = Montag, 0 = Sonntag
+        letztesBackup: null  // Datum der letzten Sicherung, z. B. "2026-10-25"
       },
       ...this.startdaten(),
       eintraege: {}
@@ -71,6 +72,43 @@ const Daten = {
     } catch (fehler) {
       console.warn('Daten konnten nicht gespeichert werden:', fehler);
     }
+  },
+
+  /* ---------- Backup (Export/Import) & Zurücksetzen ---------- */
+
+  // Alles, was in die Sicherungsdatei kommt
+  exportDaten() {
+    return {
+      app: 'habit-tracker',
+      exportiertAm: new Date().toISOString(),
+      daten: this.zustand
+    };
+  },
+
+  // Liest eine Sicherungsdatei ein und ERSETZT alle aktuellen Daten.
+  // Wirft einen Fehler mit verständlicher Meldung, wenn die Datei nicht passt.
+  importieren(inhalt) {
+    const d = inhalt && inhalt.daten ? inhalt.daten : inhalt;
+    if (!d || !Array.isArray(d.kategorien) || !Array.isArray(d.gewohnheiten) || typeof d.eintraege !== 'object') {
+      throw new Error('Das ist keine gültige Sicherungsdatei dieser App.');
+    }
+    const standard = this.standard();
+    this.zustand = {
+      ...standard,
+      ...d,
+      einstellungen: { ...standard.einstellungen, ...d.einstellungen },
+      // Fehlende Felder (z. B. aus älteren Versionen) mit Standardwerten auffüllen
+      kategorien: d.kategorien.map(k => ({ farbe: 'salbei', icon: 'star', ausgeblendet: false, ...k })),
+      gewohnheiten: d.gewohnheiten.map(g => this.gewohnheitVorlage(g)),
+      eintraege: d.eintraege || {}
+    };
+    this.speichern();
+  },
+
+  // Alles löschen und mit den Start-Kategorien neu beginnen
+  zuruecksetzen() {
+    this.zustand = this.standard();
+    this.speichern();
   },
 
   // Erzeugt eine eindeutige Kennung für neue Kategorien/Gewohnheiten

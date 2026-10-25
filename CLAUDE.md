@@ -17,9 +17,11 @@ Daraus folgen harte Regeln (wegen `file://`):
 - **Keine ES-Module** (`type="module"`/`import`) und kein `fetch()` lokaler Dateien – das blockiert der Browser bei `file://`. Nur klassische `<script src>`-Tags; alle Dateien teilen sich globale Objekte. Die Reihenfolge der Script-Tags in `index.html` ist wichtig.
 - Externe Bibliotheken nur per CDN mit fester Version: Lucide (`lucide@0.460.0`, unpkg), SortableJS (`sortablejs@1.15.3`, jsdelivr), Chart.js (`chart.js@4.4.6`, jsdelivr), Google Font Inter. Ohne Internet muss die App trotzdem laufen (`if (window.Sortable)` usw.).
 - Daten nur im `localStorage` (Schlüssel `KONFIG.speicherSchluessel` – nie ändern, sonst sind Nutzerdaten „weg“).
-- Service Worker/PWA funktionieren nur über `https://` (z. B. GitHub Pages), nicht über `file://`. Die App muss ohne Service Worker voll funktionieren.
+- Service Worker/PWA funktionieren nur über `https://` (z. B. GitHub Pages) bzw. localhost, nicht über `file://`. `PWA.start()` in `app.js` bindet Manifest und `sw.js` deshalb nur bei http(s) ein. Die App muss ohne Service Worker voll funktionieren.
+- **Bei jeder Änderung an App-Dateien `VERSION` in `sw.js` erhöhen** (sonst sieht die installierte App die Änderung erst verzögert). Neue Dateien zusätzlich in `APP_DATEIEN` in `sw.js` eintragen. Strategie: eigene Dateien stale-while-revalidate, CDN-Dateien cache-first.
+- Für den Nutzer gibt es eine deutsche `README.md` (Öffnen, Handy/Hosting, wo man was ändert, Beispiel-Sätze) – bei neuen Dateien/Funktionen mitpflegen.
 
-Testen: Der eingebaute Browser zeigt `file://`-Seiten nur als Schnappschuss ohne CSS/JS. Deshalb mit `preview_start` die Konfiguration `habit-tracker` aus `.claude/launch.json` starten (kleiner PowerShell-Server `.claude/server.ps1`, http://localhost:5500 – nur für Claude, kein Python/Node auf dem Rechner). Handy-Größe (375px) und Laptop (z. B. 1280px), Hell und Dunkel prüfen, Konsole auf Fehler checken. Es gibt keine automatischen Tests. Achtung: localhost hat einen eigenen localStorage, getrennt von den Daten des Nutzers unter `file://`. Der Browser-Pane cached JS/CSS trotz `no-store` manchmal – nach Änderungen die Dateien per `fetch(url, {cache:'reload'})` neu holen und dann `location.reload()`. Drag & Drop lässt sich mit `left_click_drag` nicht testen (zu schnell); stattdessen schrittweise Pointer-/Mouse-Events per JavaScript auslösen.
+Testen: Der eingebaute Browser zeigt `file://`-Seiten nur als Schnappschuss ohne CSS/JS. Deshalb mit `preview_start` die Konfiguration `habit-tracker` aus `.claude/launch.json` starten (kleiner PowerShell-Server `.claude/server.ps1`, http://localhost:5500 – nur für Claude, kein Python/Node auf dem Rechner). Handy-Größe (375px) und Laptop (z. B. 1280px), Hell und Dunkel prüfen, Konsole auf Fehler checken. Es gibt keine automatischen Tests. Achtung: localhost hat einen eigenen localStorage, getrennt von den Daten des Nutzers unter `file://`. Auf localhost läuft der Service Worker und liefert alte Dateien zuerst aus – vor dem Testen von Änderungen `caches.keys()` löschen (ggf. SW abmelden), Dateien per `fetch(url, {cache:'reload'})` neu holen und dann `location.reload()`. Downloads (Export) nicht wirklich auslösen, sondern `HTMLAnchorElement.prototype.click` kurz abfangen. Drag & Drop lässt sich mit `left_click_drag` nicht testen (zu schnell); stattdessen schrittweise Pointer-/Mouse-Events per JavaScript auslösen.
 
 ## Dateien & Architektur
 | Datei | Zweck |
@@ -32,7 +34,8 @@ Testen: Der eingebaute Browser zeigt `file://`-Seiten nur als Schnappschuss ohne
 | `today.js` | `Heute` + `Seiten.heute`: fällige Gewohnheiten nach Kategorie, Abhaken/Zähler/Zahlenfeld, Notiz-Dialog, Tageswechsel (nicht in die Zukunft), Fortschrittsring. Nach einer Eingabe wird nur die Zeile ersetzt (`zeileNeu`) + `zusammenfassungAktualisieren()`, damit Ring-/Plopp-Animationen laufen |
 | `stats.js` | `Statistik` + `Seiten.statistik`: Kacheln, Gesamt-Heatmap, Kategorien (Woche/Monat mit Blättern), Chart.js-Verlauf, Gewohnheitenliste mit Serien, Detail-Dialog pro Gewohnheit. Rechenregeln siehe unten |
 | `habits.js` | `Seiten.gewohnheiten`: Liste, Formulare für Kategorie/Gewohnheit, Drag & Drop (SortableJS mit `forceFallback`), Texte wie `gewohnheitBeschreibung()`/`haeufigkeitText()` |
-| `settings.js` | `Seiten.einstellungen` |
+| `settings.js` | `Seiten.einstellungen`: Darstellung, Wochenstart, „Als App installieren“ (je nach `PWA`-Zustand), Daten & Backup (Export als JSON-Download, Import über `<input type=file>` + `Daten.importieren`, Zurücksetzen) |
+| `manifest.webmanifest`, `sw.js`, `icons/` | PWA. Icons sind PNGs (192/512/maskable/apple-touch 180) + `icon.svg` als Favicon; Motiv: weißer Haken auf `#7e9c85` |
 
 Datenmodell (`Daten.zustand`):
 - `kategorien: [{ id, name, farbe, icon, ausgeblendet }]` – Array-Reihenfolge = Anzeige-Reihenfolge
@@ -64,6 +67,8 @@ Matt und ruhig: keine Verläufe, kein Glanz, keine Neonfarben; gedämpfte Palett
 2. ✅ Kategorien & Gewohnheiten anlegen/bearbeiten/löschen/ausblenden/sortieren (12 Start-Kategorien mit Beispielen), Speichern
 3. ✅ „Heute“: Abhaken, Zähler, Zahlen mit Einheit, Notiz, Fortschrittsring (mit Teil-Fortschritt bei Zielen), vergangene Tage nachtragen
 4. ✅ Statistik: Streaks, Heatmap, Wochen/Monat pro Kategorie, Chart.js-Diagramme, Erfolgsquote
-5. Export/Import (JSON), Zurücksetzen, PWA (manifest + sw.js), Feinschliff, README.md
+5. ✅ Export/Import (JSON), Zurücksetzen, PWA (manifest + sw.js), Feinschliff (bis 320px Breite getestet), README.md
+
+Offen: Hochladen ins Internet (GitHub Pages oder Netlify) braucht ein Konto des Nutzers – das legt der Nutzer selbst an; Claude kann danach per Git hochladen.
 
 Mit dem Nutzer vereinbarte Regeln: „Vermeide ich“-Gewohnheit abgehakt = heute vermieden (Erfolg). „X-mal pro Woche“ erscheint täglich, bis das Wochenziel erreicht ist. Zähler/Zahl erledigt bei erreichtem Tagesziel, ohne Ziel bei Wert > 0. Nicht fällige Tage unterbrechen Serien nicht. „Stimmung“ = Zahl 1–5. Nachtragen nur für vergangene Tage, nicht für die Zukunft.
