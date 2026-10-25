@@ -15,7 +15,7 @@ Persönlicher Habit Tracker als reine Web-App (HTML/CSS/JS). Wird per **Doppelkl
 
 Daraus folgen harte Regeln (wegen `file://`):
 - **Keine ES-Module** (`type="module"`/`import`) und kein `fetch()` lokaler Dateien – das blockiert der Browser bei `file://`. Nur klassische `<script src>`-Tags; alle Dateien teilen sich globale Objekte. Die Reihenfolge der Script-Tags in `index.html` ist wichtig.
-- Externe Bibliotheken nur per CDN mit fester Version: Lucide (`lucide@0.460.0`, unpkg), SortableJS (`sortablejs@1.15.3`, jsdelivr), Chart.js (`chart.js@4.4.6`, jsdelivr), Google Font Inter. Ohne Internet muss die App trotzdem laufen (`if (window.Sortable)` usw.).
+- Externe Bibliotheken nur per CDN mit fester Version: Lucide (`lucide@0.460.0`, unpkg), SortableJS (`sortablejs@1.15.3`, jsdelivr), Chart.js (`chart.js@4.4.6`, jsdelivr), Google Fonts Inter (alles) und Lora (nur Zitate der Weisheit, `--schrift-zitat`). Ohne Internet muss die App trotzdem laufen (`if (window.Sortable)` usw.).
 - Daten nur im `localStorage` (Schlüssel `KONFIG.speicherSchluessel` – nie ändern, sonst sind Nutzerdaten „weg“).
 - Service Worker/PWA funktionieren nur über `https://` (z. B. GitHub Pages) bzw. localhost, nicht über `file://`. `PWA.start()` in `app.js` bindet Manifest und `sw.js` deshalb nur bei http(s) ein. Die App muss ohne Service Worker voll funktionieren.
 - **Bei jeder Änderung an App-Dateien `VERSION` in `sw.js` erhöhen** (sonst sieht die installierte App die Änderung erst verzögert). Neue Dateien zusätzlich in `APP_DATEIEN` in `sw.js` eintragen. Strategie: eigene Dateien stale-while-revalidate, CDN-Dateien cache-first.
@@ -26,13 +26,15 @@ Testen: Der eingebaute Browser zeigt `file://`-Seiten nur als Schnappschuss ohne
 ## Dateien & Architektur
 | Datei | Zweck |
 |---|---|
-| `index.html` | Gerüst: Navigation + vier `<section class="seite">` (heute, statistik, gewohnheiten, einstellungen) |
+| `index.html` | Gerüst: Navigation + fünf `<section class="seite">` (heute, weisheit, statistik, gewohnheiten, einstellungen) |
 | `styles.css` | Gesamtes Aussehen. **Abschnitt 1 enthält alle Design-Variablen** (Farben, Schrift, Abstände, Rundungen) – Design nur dort ändern |
 | `config.js` | `KONFIG`: App-Name, Version, Farbauswahl, Icon-Auswahl, `startKategorien` (12 Kategorien mit Beispiel-Gewohnheiten, nur beim allerersten Start verwendet) |
 | `data.js` | `Daten` (Laden/Speichern von `Daten.zustand`, CRUD für Kategorien/Gewohnheiten, `gewohnheitVorlage()` mit allen Standardfeldern, `reihenfolgeUebernehmen()` nach Drag & Drop, Einträge `wert`/`wertSetzen`/`notizSetzen`, **Auswertung** `istErledigt`/`fortschritt`/`wochenErledigt`/`istFaellig` – Statistik in Phase 4 soll diese wiederverwenden) und `Datum` (deutsche Formate, Tages-Schlüssel `JJJJ-MM-TT`, `heute`, `plusTage`, `wocheVon`, `ausSchluessel`). `Daten.laden()` steht ganz unten, weil es `Datum` braucht |
 | `app.js` | Helfer (`esc`, `icon`, `iconsZeichnen`, `seitenKopf`, `platzhalter`, `auswahlGruppe`, `radioGruppe`, `schalter`, `zahl`, `zahlLesen`, `meldung`, `Dialog`, `bestaetigen`, `fortschrittsRing` + `ringSetzen`), `Design` (Hell/Dunkel), leeres Verzeichnis `Seiten` (jede Seiten-Datei trägt sich selbst ein), `Navigation`, Start |
 | `today.js` | `Heute` + `Seiten.heute`: fällige Gewohnheiten nach Kategorie, Abhaken/Zähler/Zahlenfeld, Notiz-Dialog, Tageswechsel (nicht in die Zukunft), Fortschrittsring. Nach einer Eingabe wird nur die Zeile ersetzt (`zeileNeu`) + `zusammenfassungAktualisieren()`, damit Ring-/Plopp-Animationen laufen |
 | `stats.js` | `Statistik` + `Seiten.statistik`: Kacheln, Gesamt-Heatmap, Kategorien (Woche/Monat mit Blättern), Chart.js-Verlauf, Gewohnheitenliste mit Serien, Detail-Dialog pro Gewohnheit. Rechenregeln siehe unten |
+| `wisdom.js` | Nur Inhalte: `EPOCHEN` (Name + Farb-id), `PHILOSOPHEN` (Name, Lebenszeit, Epoche, `deutsch: true` = Originalsprache Deutsch, sonst Karte zeigt „übersetzt“), `WEISHEITEN` (151 Einträge: `id, von, typ, text, sinngemaess, quelle, erklaerung, denkanstoss`). Vom Nutzer selbst erweiterbar (Anleitung in README) |
+| `wisdom-page.js` | `Weisheit` + `Seiten.weisheit`: Tagesauswahl, Ansichten Heute/Archiv/Favoriten, Filter, Detail-Dialog, Notizen (verzögert gespeichert, `notizenJetztSpeichern()` beim Verlassen), Kopieren/Teilen, `vorschauHtml()` für „Heute“ |
 | `habits.js` | `Seiten.gewohnheiten`: Liste, Formulare für Kategorie/Gewohnheit, Drag & Drop (SortableJS mit `forceFallback`), Texte wie `gewohnheitBeschreibung()`/`haeufigkeitText()` |
 | `settings.js` | `Seiten.einstellungen`: Darstellung, Wochenstart, „Als App installieren“ (je nach `PWA`-Zustand), Daten & Backup (Export als JSON-Download, Import über `<input type=file>` + `Daten.importieren`, Zurücksetzen) |
 | `manifest.webmanifest`, `sw.js`, `icons/` | PWA. Icons sind PNGs (192/512/maskable/apple-touch 180) + `icon.svg` als Favicon; Motiv: weißer Haken auf `#7e9c85` |
@@ -42,6 +44,12 @@ Datenmodell (`Daten.zustand`):
 - `gewohnheiten: [{ id, kategorieId, name, icon, typ: 'janein'|'zaehler'|'zahl', ziel (Zahl oder null; bei negativ = Höchstwert), einheit, richtung: 'positiv'|'negativ', haeufigkeit: { art: 'taeglich'|'wochentage'|'proWoche', tage: [0–6, 0 = So], anzahl }, ausgeblendet, erstellt }]` – Farbe kommt immer von der Kategorie
 - `eintraege: { 'JJJJ-MM-TT': { [gewohnheitId]: { wert?, notiz? } } }` – `wert` ist immer eine Zahl (Abhaken: 1 = erledigt/vermieden; Zähler/Zahl: der Wert); kein Wert = nichts eingetragen. Leere Einträge/Tage werden entfernt; beim Löschen einer Gewohnheit verschwinden ihre Einträge mit
 - Fälligkeit hängt nicht vom Erstelldatum ab (damit man auch vor dem Anlegen nachtragen kann).
+- `weisheit: { verlauf: { 'JJJJ-MM-TT': weisheitId }, favoriten: [ids], notizen: { 'JJJJ-MM-TT': text } }` – Teil von Export/Import. Einstellung `weisheitAufHeute` schaltet die Vorschau auf „Heute“.
+
+Weisheit-Regeln (`wisdom-page.js`):
+- Die Zuordnung Tag → Weisheit wird im `verlauf` gespeichert (stabil, auch wenn `wisdom.js` wächst). `verlaufFuellen()` trägt fehlende Tage bis heute nach; beim ersten Start werden 7 Tage rückwirkend gefüllt (Archiv nicht leer).
+- `waehle(tag)`: keine Wiederholung innerhalb einer Runde; nie dieselbe Epoche wie am Vortag (Ausweichstufe: anderer Philosoph); Epoche gewichtet mit (übrige Einträge)², dann Eintrag per Hash des Datums – deterministisch. Simuliert: über ~12.000 Tage 1× gleiche Epoche hintereinander.
+- **Echtheit hat Vorrang:** neue Einträge nur mit Werkangabe; Wortlaut deutscher Autoren nur, wenn sicher, sonst `sinngemaess: true`; bekannte Fehlzuschreibungen (viele „Buddha“-/„Konfuzius“-/„Sun Tzu“-Internetzitate) nicht aufnehmen. `id` nie ändern (Favoriten/Verlauf hängen daran).
 
 Statistik-Regeln (`stats.js`):
 - Eine Gewohnheit zählt ab `startVon(g)` = Erstelldatum oder erster Eintrag, falls früher. Ausgeblendete Gewohnheiten/Kategorien fließen nicht ein.
@@ -60,7 +68,7 @@ Zusammenspiel:
 - Nutzertexte immer mit `esc()` einsetzen.
 
 ## Design-Vorgaben
-Matt und ruhig: keine Verläufe, kein Glanz, keine Neonfarben; gedämpfte Palette; viel Weißraum; Rundungen 14–20px; feine Linien statt Schatten; Schrift Inter; nur sanfte, kurze Animationen. Mobile-first, untere Navigationsleiste am Handy (ab 900px Breite: Leiste links). Oberfläche komplett Deutsch, Datum `TT.MM.JJJJ`.
+Matt und ruhig: keine Verläufe, kein Glanz, keine Neonfarben; gedämpfte Palette; viel Weißraum; Rundungen 14–20px; feine Linien statt Schatten; Schrift Inter; nur sanfte, kurze Animationen. Mobile-first, untere Navigationsleiste am Handy mit fünf Punkten (Beschriftung bis 420px Breite verkleinert, damit „Gewohnheiten“/„Einstellungen“ nicht aneinanderstoßen; ab 900px Breite: Leiste links). Oberfläche komplett Deutsch, Datum `TT.MM.JJJJ`.
 
 ## Phasen (Stand)
 1. ✅ Grundgerüst, Design-System, Dark/Light, Navigation
@@ -68,6 +76,7 @@ Matt und ruhig: keine Verläufe, kein Glanz, keine Neonfarben; gedämpfte Palett
 3. ✅ „Heute“: Abhaken, Zähler, Zahlen mit Einheit, Notiz, Fortschrittsring (mit Teil-Fortschritt bei Zielen), vergangene Tage nachtragen
 4. ✅ Statistik: Streaks, Heatmap, Wochen/Monat pro Kategorie, Chart.js-Diagramme, Erfolgsquote
 5. ✅ Export/Import (JSON), Zurücksetzen, PWA (manifest + sw.js), Feinschliff (bis 320px Breite getestet), README.md
+6. ✅ Reiter „Weisheit des Tages“ (Version 1.1)
 
 ## Veröffentlichung (GitHub Pages)
 - Repo: https://github.com/TEchnox3108/habit-tracker (öffentlich, Branch `main`), live unter https://technox3108.github.io/habit-tracker/

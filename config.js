@@ -16,7 +16,7 @@ const KONFIG = {
   speicherSchluessel: 'habit-tracker-daten',
 
   // Version der App (steht unten in den Einstellungen)
-  version: '1.0',
+  version: '1.1',
 
   // Farbauswahl für Kategorien.
   // "id" verweist auf die Farbe in styles.css (z. B. --farbe-salbei),

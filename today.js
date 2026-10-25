@@ -161,8 +161,12 @@ const Heute = {
     this.bereich = bereich;
     const gruppen = this.gruppen();
 
+    // Vorschau der "Weisheit des Tages" (nur heute und nur, wenn eingeschaltet)
+    const weisheit = this.istHeute() && Daten.einstellung('weisheitAufHeute') ? Weisheit.vorschauHtml() : '';
+
     bereich.innerHTML = `
       ${this.kopfHtml()}
+      ${weisheit}
       <section class="karte ring-karte">
         ${fortschrittsRing(0)}
         <div>
@@ -276,6 +280,10 @@ const Heute = {
         break;
       case 'notiz':
         this.notizOeffnen(id);
+        break;
+      case 'weisheit-vorschau':
+        // Der Link führt zur Seite "Weisheit" – dort die heutige Weisheit zeigen
+        Weisheit.ansicht = 'heute';
         break;
     }
   },

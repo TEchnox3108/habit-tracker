@@ -67,7 +67,51 @@ Auch die Version per Doppelklick und die Internet-Version auf demselben Laptop h
 
 ---
 
-## 4. Wo ändere ich was?
+## 4. Weisheit des Tages
+
+Im Reiter **Weisheit** erscheint jeden Tag eine andere philosophische Weisheit – mit Erklärung
+(„Was bedeutet das?“) und einem **Denkanstoß für heute**.
+
+- **Heute | Archiv | Favoriten:** Oben umschalten. Im Archiv findest du die Weisheiten der vergangenen Tage,
+  in den Favoriten alle, bei denen du auf **„Merken“** (Herz) getippt hast.
+- **Filter:** In Archiv und Favoriten kannst du nach Epoche (farbige Knöpfe) und nach Philosoph filtern.
+- **Meine Gedanken dazu:** Unter der Karte kannst du eine Notiz schreiben. Sie wird pro Tag automatisch gespeichert.
+- **Kopieren / Teilen:** kopiert die Weisheit als Text (am Handy öffnet „Teilen“ das normale Teilen-Menü).
+- **Vorschau auf „Heute“:** oben auf der Startseite. Abschalten unter **Einstellungen → Weisheit des Tages**.
+- Die Weisheit wechselt um Mitternacht und bleibt den ganzen Tag gleich. Erst wenn alle Einträge einmal dran
+  waren, geht es von vorn los. Nie kommt zwei Tage hintereinander dieselbe Epoche.
+- Favoriten, Notizen und der Verlauf sind im **Backup (Export/Import)** enthalten.
+- **„sinngemäß“** heißt: kein wörtliches Zitat, sondern der Gedanke zusammengefasst.
+  **„übersetzt“** heißt: Der Denker hat nicht auf Deutsch geschrieben, der Text ist eine Übersetzung.
+
+### Selbst eine Weisheit hinzufügen
+Öffne `wisdom.js` mit einem Texteditor (z. B. Editor/Notepad) und füge in der Liste `WEISHEITEN`
+(z. B. ganz unten vor der letzten Zeile `];`) einen neuen Block ein. Beispiel:
+
+```js
+  {
+    id: 'seneca-heute-leben', von: 'seneca', typ: 'zitat',
+    text: 'Während man das Leben aufschiebt, eilt es vorüber.',
+    sinngemaess: false, quelle: 'Briefe an Lucilius 1,3',
+    erklaerung: 'Seneca meint: Wer immer auf später wartet, verpasst das Jetzt. Das Leben passiert heute.',
+    denkanstoss: 'Was schiebst du auf „irgendwann“? Tu heute einen ersten Schritt.'
+  },
+```
+
+Darauf achten:
+- **Komma** nach der schließenden geschweiften Klammer `},` nicht vergessen.
+- `id` muss einmalig sein (kleine Buchstaben und Bindestriche). Später nicht mehr ändern – sonst gehen Favoriten verloren.
+- `von` muss ein Name aus der Liste `PHILOSOPHEN` (weiter oben in derselben Datei) sein. Für einen neuen
+  Philosophen dort erst eine Zeile ergänzen, z. B.
+  `voltaire: { name: 'Voltaire', lebenszeit: '1694–1778', epoche: 'aufklaerung' },`
+- `typ` ist `'zitat'`, `'lebensregel'`, `'gedankenexperiment'` oder `'denkanstoss'`.
+- Texte stehen zwischen einfachen Anführungszeichen `'...'`. Für Apostrophe im Text das Zeichen `’` benutzen.
+- Danach die App neu laden. Wenn die Seite leer bleibt, hat sich meist ein Komma oder Anführungszeichen versteckt –
+  oder du sagst einfach Claude Bescheid.
+
+---
+
+## 5. Wo ändere ich was?
 
 | Was du ändern willst | Wo |
 |---|---|
@@ -78,6 +122,9 @@ Auch die Version per Doppelklick und die Internet-Version auf demselben Laptop h
 | **Icon-Auswahl** | `config.js` → Liste `icons` (Namen findest du auf [lucide.dev/icons](https://lucide.dev/icons)) |
 | **Start-Kategorien** (nur für den allerersten Start) | `config.js` → `startKategorien` |
 | **Name der App** | `config.js` → `appName` und `manifest.webmanifest` → `name` |
+| **Weisheiten** (hinzufügen, ändern) und **Epochen-Farben** | `wisdom.js` (siehe Abschnitt 4) |
+| **Schrift der Zitate** | `styles.css` → `--schrift-zitat` |
+| **Texte auf der Seite „Weisheit“** | `wisdom-page.js` |
 | **Texte auf der Seite „Heute“** | `today.js` |
 | **Texte auf der Seite „Statistik“** | `stats.js` |
 | **Texte auf der Seite „Gewohnheiten“** | `habits.js` |
@@ -95,18 +142,20 @@ Auch die Version per Doppelklick und die Internet-Version auf demselben Laptop h
 | `app.js` | Hilfsbausteine, Hell/Dunkel, Navigation, Handy-App |
 | `today.js` | Seite „Heute“ |
 | `stats.js` | Seite „Statistik“ |
+| `wisdom.js` | Alle Weisheiten, Philosophen und Epochen (nur Inhalte) |
+| `wisdom-page.js` | Seite „Weisheit“ |
 | `habits.js` | Seite „Gewohnheiten“ |
 | `settings.js` | Seite „Einstellungen“ |
 | `manifest.webmanifest`, `sw.js`, `icons/` | Alles für die Handy-App |
 | `CLAUDE.md` | Anleitung für Claude (wie das Projekt aufgebaut ist) |
 
-**Nach Änderungen an der Internet-Version:** In `sw.js` die Zeile `const VERSION = 'v1';` um eins erhöhen
-(z. B. `'v2'`) und neu hochladen – sonst zeigt das Handy evtl. noch kurz die alte Version.
+**Nach Änderungen an der Internet-Version:** In `sw.js` die Zeile `const VERSION = 'v2';` um eins erhöhen
+(z. B. `'v3'`) und neu hochladen – sonst zeigt das Handy evtl. noch kurz die alte Version.
 Wenn du Claude um Änderungen bittest, erledigt Claude das mit.
 
 ---
 
-## 5. So kannst du Claude um Änderungen bitten
+## 6. So kannst du Claude um Änderungen bitten
 
 Du kannst ganz normal auf Deutsch schreiben. Ein paar Beispiele:
 
@@ -122,6 +171,12 @@ Du kannst ganz normal auf Deutsch schreiben. Ein paar Beispiele:
 - „Bei ‚Stimmung des Tages‘ möchte ich Smileys statt einer Zahl auswählen.“
 - „Zeig auf der Startseite oben einen motivierenden Spruch.“
 - „Bei Zählern soll man auch in 0,5er-Schritten zählen können.“
+
+**Weisheit**
+- „Füge 20 weitere Weisheiten von Marc Aurel und Laozi hinzu.“
+- „Nimm Voltaire als neuen Philosophen in die Aufklärung auf.“
+- „Die Zitate sollen etwas kleiner sein.“
+- „Ich möchte eine Erinnerung, die Notiz zur Tagesweisheit abends auszufüllen.“
 
 **Statistik**
 - „Zeig in der Statistik auch, an welchem Wochentag ich am fleißigsten bin.“

@@ -6,6 +6,7 @@
      - kategorien:    Liste der Kategorien (Reihenfolge = Anzeige)
      - gewohnheiten:  Liste aller Gewohnheiten (Reihenfolge = Anzeige)
      - eintraege:     was du an welchem Tag erledigt hast
+     - weisheit:      Verlauf, Favoriten und Notizen der "Weisheit des Tages"
    Der Browser merkt es sich im "localStorage" – das ist ein
    kleiner Speicher im Browser, der auch nach dem Schließen bleibt.
 
@@ -23,10 +24,13 @@ const Daten = {
       einstellungen: {
         design: 'system',    // 'system', 'hell' oder 'dunkel'
         wochenstart: 1,      // 1 = Montag, 0 = Sonntag
-        letztesBackup: null  // Datum der letzten Sicherung, z. B. "2026-10-25"
+        letztesBackup: null, // Datum der letzten Sicherung, z. B. "2026-10-25"
+        weisheitAufHeute: true // Vorschau der Tagesweisheit auf der Seite "Heute"
       },
       ...this.startdaten(),
-      eintraege: {}
+      eintraege: {},
+      // Weisheit des Tages: welche an welchem Tag dran war, Favoriten, eigene Notizen
+      weisheit: { verlauf: {}, favoriten: [], notizen: {} }
     };
   },
 
@@ -55,7 +59,8 @@ const Daten = {
       this.zustand = {
         ...standard,
         ...gespeichert,
-        einstellungen: { ...standard.einstellungen, ...gespeichert.einstellungen }
+        einstellungen: { ...standard.einstellungen, ...gespeichert.einstellungen },
+        weisheit: { ...standard.weisheit, ...gespeichert.weisheit }
       };
       // Beim allerersten Start die Startdaten gleich festhalten
       if (!gespeichert.kategorien) this.speichern();
@@ -100,7 +105,8 @@ const Daten = {
       // Fehlende Felder (z. B. aus älteren Versionen) mit Standardwerten auffüllen
       kategorien: d.kategorien.map(k => ({ farbe: 'salbei', icon: 'star', ausgeblendet: false, ...k })),
       gewohnheiten: d.gewohnheiten.map(g => this.gewohnheitVorlage(g)),
-      eintraege: d.eintraege || {}
+      eintraege: d.eintraege || {},
+      weisheit: { ...standard.weisheit, ...(d.weisheit || {}) }
     };
     this.speichern();
   },

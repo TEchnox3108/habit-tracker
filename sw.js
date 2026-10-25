@@ -9,7 +9,7 @@
    erhöhen. Dann holt sich das Handy die neuen Dateien.
    ========================================================= */
 
-const VERSION = 'v1';
+const VERSION = 'v2';
 const SPEICHER = `habit-tracker-${VERSION}`;
 
 // Die eigenen Dateien der App
@@ -23,6 +23,8 @@ const APP_DATEIEN = [
   './habits.js',
   './today.js',
   './stats.js',
+  './wisdom.js',
+  './wisdom-page.js',
   './settings.js',
   './manifest.webmanifest',
   './icons/icon.svg',

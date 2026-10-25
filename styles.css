@@ -17,6 +17,7 @@
 :root {
   /* ---- Schrift ---- */
   --schrift: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --schrift-zitat: 'Lora', Georgia, 'Times New Roman', serif; /* nur für die Zitate der Weisheit */
   --schrift-klein: 0.8125rem;   /* 13px – kleine Hinweise */
   --schrift-normal: 0.9375rem;  /* 15px – normaler Text */
   --schrift-gross: 1.0625rem;   /* 17px – Überschriften in Karten */
@@ -1671,6 +1672,332 @@ button.heute-haupt {
   font-size: 0.75rem;
 }
 
+/* ---- Seite "Weisheit" ---- */
+
+/* Farbiger Punkt der Epoche */
+.epoche-punkt {
+  display: inline-block;
+  flex-shrink: 0;
+  width: 8px;
+  height: 8px;
+  border-radius: var(--rundung-voll);
+  background: var(--kat);
+}
+
+/* Die große Tageskarte */
+.weisheit-karte {
+  display: flex;
+  flex-direction: column;
+  gap: var(--abstand-xl);
+  padding: var(--abstand-xxl) var(--abstand-xl) var(--abstand-xl);
+  border: 1px solid var(--linie);
+  border-radius: var(--rundung-gross);
+  background: var(--flaeche);
+  box-shadow: var(--schatten);
+  animation: weisheit-rein 700ms var(--kurve);
+}
+
+@keyframes weisheit-rein {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* Im Fenster (Archiv/Favoriten) ohne eigenen Rahmen */
+.blatt .weisheit-karte {
+  padding: var(--abstand-s) 0 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  animation: none;
+}
+
+.weisheit-oben {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--abstand-m);
+}
+
+.epoche-marke {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: var(--rundung-voll);
+  background: color-mix(in srgb, var(--kat) var(--toenung), transparent);
+  color: var(--text);
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.typ-marke {
+  color: var(--text-3);
+  font-size: 0.75rem;
+}
+
+/* Das Zitat: groß, ruhig, in Serifenschrift */
+.weisheit-zitat {
+  margin: 0;
+  color: var(--text);
+  font-family: var(--schrift-zitat);
+  font-size: 1.5rem;
+  font-weight: 400;
+  line-height: 1.45;
+  text-wrap: pretty;
+}
+
+.weisheit-zitat.lang {
+  font-size: 1.1875rem;
+  line-height: 1.55;
+}
+
+/* Wer, wann, woher */
+.weisheit-person {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding-left: var(--abstand-m);
+  border-left: 2px solid var(--kat);
+  font-size: var(--schrift-klein);
+}
+
+.weisheit-person strong {
+  font-size: var(--schrift-normal);
+  font-weight: 600;
+}
+
+.weisheit-person span {
+  color: var(--text-2);
+}
+
+.weisheit-person .weisheit-quelle {
+  color: var(--text-3);
+  font-size: 0.75rem;
+}
+
+.weisheit-person .sinngemaess-marke {
+  margin-top: 6px;
+  padding: 2px 9px;
+  border: 1px solid var(--linie);
+  border-radius: var(--rundung-voll);
+  color: var(--text-2);
+  font-size: 0.6875rem;
+  font-style: italic;
+}
+
+/* "Was bedeutet das?" und "Denkanstoß" */
+.weisheit-abschnitt h3 {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: var(--abstand-xs);
+  color: var(--text-2);
+  font-size: var(--schrift-klein);
+  font-weight: 600;
+}
+
+.weisheit-abschnitt h3 svg {
+  width: 15px;
+  height: 15px;
+  color: var(--kat);
+}
+
+.weisheit-abschnitt p {
+  line-height: 1.6;
+}
+
+.weisheit-abschnitt.denkanstoss {
+  padding: var(--abstand-l);
+  border-radius: var(--rundung);
+  background: color-mix(in srgb, var(--kat) 9%, transparent);
+}
+
+/* Knöpfe: Merken, Kopieren, Teilen */
+.weisheit-knoepfe {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--abstand-s);
+}
+
+.knopf.klein {
+  min-height: 38px;
+  padding: 0 var(--abstand-l);
+  border-radius: var(--rundung-voll);
+  font-size: var(--schrift-klein);
+}
+
+.knopf.klein svg {
+  width: 16px;
+  height: 16px;
+}
+
+.favorit.an {
+  color: var(--farbe-koralle);
+}
+
+.favorit.an svg {
+  fill: currentColor;
+}
+
+.weisheit-notiz .feld-titel {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.weisheit-notiz .feld-titel svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* Filter in Archiv und Favoriten */
+.filter-leiste {
+  display: flex;
+  gap: 6px;
+  margin: 0 calc(var(--abstand-l) * -1);
+  padding: 0 var(--abstand-l) 2px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.filter-leiste::-webkit-scrollbar {
+  display: none;
+}
+
+.filter-chip {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 6px;
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid var(--linie);
+  border-radius: var(--rundung-voll);
+  background: var(--flaeche);
+  color: var(--text-2);
+  font-size: var(--schrift-klein);
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.filter-chip.aktiv {
+  border-color: var(--text);
+  background: var(--text);
+  color: var(--hintergrund);
+}
+
+.filter-person {
+  min-height: 42px;
+}
+
+.leer-filter {
+  padding: var(--abstand-l) var(--abstand-xs);
+}
+
+/* Liste in Archiv und Favoriten */
+.weisheit-liste {
+  display: flex;
+  flex-direction: column;
+  gap: var(--abstand-m);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.weisheit-eintrag {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  padding: var(--abstand-l);
+  border: 1px solid var(--linie);
+  border-radius: var(--rundung-gross);
+  background: var(--flaeche);
+  box-shadow: var(--schatten);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.weisheit-eintrag:hover {
+  border-color: var(--text-3);
+}
+
+.eintrag-kopf {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-3);
+  font-size: 0.75rem;
+}
+
+.eintrag-kopf svg {
+  width: 13px;
+  height: 13px;
+}
+
+.eintrag-herz {
+  display: grid;
+  color: var(--farbe-koralle);
+}
+
+.eintrag-herz svg {
+  fill: currentColor;
+}
+
+.eintrag-zitat,
+.vorschau-zitat {
+  display: -webkit-box;
+  overflow: hidden;
+  font-family: var(--schrift-zitat);
+  font-size: 1.0625rem;
+  line-height: 1.45;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+.eintrag-person {
+  color: var(--text-2);
+  font-size: var(--schrift-klein);
+  font-weight: 500;
+}
+
+/* Kleine Vorschau auf der Seite "Heute" */
+.weisheit-vorschau {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-bottom: var(--abstand-l);
+  color: inherit;
+  text-decoration: none;
+}
+
+.vorschau-kopf {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-3);
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.vorschau-kopf svg {
+  width: 16px;
+  height: 16px;
+  margin-left: auto;
+}
+
+.vorschau-zitat {
+  -webkit-line-clamp: 2;
+}
+
+.karten-abstand {
+  margin-top: var(--abstand-l);
+}
+
 /* ---- Einstellungen: Daten & Installieren ---- */
 .aktionen-liste {
   display: flex;
@@ -1739,6 +2066,21 @@ button.heute-haupt {
   to   { opacity: 1; transform: translate(-50%, 0); }
 }
 
+/* Fünf Navigationspunkte am Handy: Beschriftung etwas kleiner, damit zwischen
+   "Gewohnheiten" und "Einstellungen" Luft bleibt */
+@media (max-width: 420px) {
+  .navi-punkt {
+    font-size: 0.625rem;
+  }
+}
+
+@media (max-width: 350px) {
+  .navi-punkt {
+    font-size: 0.5625rem;
+    letter-spacing: -0.01em;
+  }
+}
+
 /* Sehr schmale Handys: Bedienelemente etwas kompakter, damit die Namen Platz haben */
 @media (max-width: 370px) {
   .inhalt {
@@ -1792,6 +2134,27 @@ button.heute-haupt {
   .ring {
     width: 96px;
     height: 96px;
+  }
+
+  .navi-icon {
+    width: 44px;
+  }
+
+  .weisheit-karte {
+    padding: var(--abstand-xl) var(--abstand-l) var(--abstand-l);
+  }
+
+  .weisheit-zitat {
+    font-size: 1.3125rem;
+  }
+
+  .weisheit-zitat.lang {
+    font-size: 1.125rem;
+  }
+
+  .filter-leiste {
+    margin: 0 calc(var(--abstand-m) * -1);
+    padding: 0 var(--abstand-m) 2px;
   }
 }
 

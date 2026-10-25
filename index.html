@@ -17,10 +17,10 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <!-- Das Manifest (App-Beschreibung) bindet app.js nur ein, wenn die App online geöffnet ist -->
 
-  <!-- Schrift "Inter" von Google Fonts -->
+  <!-- Schriften von Google Fonts: "Inter" für alles, "Lora" nur für die Zitate der Weisheit -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Lora:ital,wght@0,400;0,500;1,400&display=swap">
 
   <!-- Unser Aussehen (Farben, Abstände, Schriften stehen ganz oben in styles.css) -->
   <link rel="stylesheet" href="styles.css">
@@ -39,6 +39,8 @@
   <script src="habits.js"></script>   <!-- Seite "Gewohnheiten" -->
   <script src="today.js"></script>    <!-- Seite "Heute" -->
   <script src="stats.js"></script>    <!-- Seite "Statistik" -->
+  <script src="wisdom.js"></script>   <!-- Sammlung der Weisheiten (nur Inhalte) -->
+  <script src="wisdom-page.js"></script> <!-- Seite "Weisheit" -->
   <script src="settings.js"></script> <!-- Seite "Einstellungen" -->
 </head>
 <body>
@@ -54,6 +56,10 @@
         <span class="navi-icon"><i data-lucide="sun"></i></span>
         <span class="navi-text">Heute</span>
       </a>
+      <a class="navi-punkt" href="#weisheit" data-seite="weisheit">
+        <span class="navi-icon"><i data-lucide="scroll-text"></i></span>
+        <span class="navi-text">Weisheit</span>
+      </a>
       <a class="navi-punkt" href="#statistik" data-seite="statistik">
         <span class="navi-icon"><i data-lucide="chart-column"></i></span>
         <span class="navi-text">Statistik</span>
@@ -68,9 +74,10 @@
       </a>
     </nav>
 
-    <!-- Hier erscheinen die vier Seiten. Immer nur eine ist sichtbar. -->
+    <!-- Hier erscheinen die fünf Seiten. Immer nur eine ist sichtbar. -->
     <main class="inhalt">
       <section class="seite" id="seite-heute" data-seite="heute"></section>
+      <section class="seite" id="seite-weisheit" data-seite="weisheit" hidden></section>
       <section class="seite" id="seite-statistik" data-seite="statistik" hidden></section>
       <section class="seite" id="seite-gewohnheiten" data-seite="gewohnheiten" hidden></section>
       <section class="seite" id="seite-einstellungen" data-seite="einstellungen" hidden></section>

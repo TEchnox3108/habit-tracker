@@ -5,6 +5,7 @@
    - Hell/Dunkel umschalten
    - den Wochenstart festlegen
    - zur Verwaltung der Kategorien & Gewohnheiten springen
+   - die Vorschau der Tagesweisheit auf "Heute" ein-/ausschalten
    - die App aufs Handy installieren (wenn sie online ist)
    - deine Daten sichern, wieder einlesen oder alles zurücksetzen
    - die Farbpalette ansehen
@@ -94,6 +95,14 @@ Seiten.einstellungen = {
         ${icon('chevron-right')}
       </a>
 
+      <section class="karte">
+        <h2 class="karten-titel">Weisheit des Tages</h2>
+        <p class="karten-text">Die Weisheiten selbst stehen in der Datei wisdom.js.</p>
+        <div class="karten-abstand">
+          ${schalter('weisheitAufHeute', 'Vorschau auf „Heute“', 'Zeigt die Tagesweisheit oben auf der Startseite.', e.weisheitAufHeute)}
+        </div>
+      </section>
+
       ${this.installierenHtml()}
 
       <section class="karte">
@@ -149,6 +158,9 @@ Seiten.einstellungen = {
     };
     bereich.onchange = ereignis => {
       if (ereignis.target.matches('[data-import-datei]')) this.importieren(ereignis.target);
+      if (ereignis.target.name === 'weisheitAufHeute') {
+        Daten.einstellungSetzen('weisheitAufHeute', ereignis.target.checked);
+      }
     };
   },
 

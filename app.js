@@ -283,7 +283,7 @@ PWA.start();
    Jede Seite hat einen Titel und eine Funktion "anzeigen",
    die den Inhalt in ihren Bereich schreibt. Die Seiten melden
    sich in ihren eigenen Dateien hier an:
-   today.js (Heute), stats.js (Statistik),
+   today.js (Heute), wisdom-page.js (Weisheit), stats.js (Statistik),
    habits.js (Gewohnheiten), settings.js (Einstellungen). */
 const Seiten = {};
 
