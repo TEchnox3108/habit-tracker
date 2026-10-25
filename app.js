@@ -4,7 +4,7 @@
    Inhalt:
    1. Kleine Helfer (Icons, Texte, Bausteine)
    2. Dark/Light Mode
-   3. Die Seiten (Statistik – die anderen haben eigene Dateien)
+   3. Verzeichnis der Seiten
    4. Navigation zwischen den Seiten
    5. Start der App
    ========================================================= */
@@ -219,21 +219,11 @@ Design.anwenden();
 
 /* ---------- 3. Die Seiten ----------
    Jede Seite hat einen Titel und eine Funktion "anzeigen",
-   die den Inhalt in ihren Bereich schreibt.
-   Die Seite "Heute" steht in today.js,
-   die Seite "Gewohnheiten" in habits.js,
-   die Seite "Einstellungen" in settings.js. */
-const Seiten = {
-  statistik: {
-    titel: 'Statistik',
-    anzeigen(bereich) {
-      bereich.innerHTML = `
-        ${seitenKopf('Statistik', 'Deine Fortschritte auf einen Blick')}
-        ${platzhalter('chart-column', 'Noch keine Statistiken',
-          'In Phase 4 findest du hier Serien, einen Kalender und Diagramme.')}`;
-    }
-  }
-};
+   die den Inhalt in ihren Bereich schreibt. Die Seiten melden
+   sich in ihren eigenen Dateien hier an:
+   today.js (Heute), stats.js (Statistik),
+   habits.js (Gewohnheiten), settings.js (Einstellungen). */
+const Seiten = {};
 
 
 /* ---------- 4. Navigation ----------

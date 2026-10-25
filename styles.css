@@ -1322,6 +1322,354 @@ button.heute-haupt {
   resize: vertical;
 }
 
+/* ---- Seite "Statistik" ---- */
+
+/* Kopfzeile einer Karte: Titel links, Umschalter rechts */
+.karten-kopf {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--abstand-m);
+  min-height: 36px;
+  margin-bottom: var(--abstand-m);
+}
+
+.karten-kopf .karten-text {
+  margin: 0;
+}
+
+.karten-kopf .auswahl-gruppe {
+  padding: 3px;
+}
+
+.karten-kopf .auswahl-knopf {
+  min-height: 30px;
+  padding: 0 var(--abstand-m);
+  font-size: var(--schrift-klein);
+  white-space: nowrap;
+}
+
+/* Kacheln mit großen Zahlen */
+.kacheln {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--abstand-m);
+}
+
+.kachel {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  padding: var(--abstand-l);
+  border: 1px solid var(--linie);
+  border-radius: var(--rundung-gross);
+  background: var(--flaeche);
+  box-shadow: var(--schatten);
+}
+
+.kachel-titel {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-2);
+  font-size: var(--schrift-klein);
+  font-weight: 500;
+}
+
+.kachel-titel svg {
+  width: 15px;
+  height: 15px;
+  color: var(--kat, var(--akzent-text));
+}
+
+.kachel strong {
+  margin-top: var(--abstand-xs);
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.kachel small {
+  overflow: hidden;
+  color: var(--text-3);
+  font-size: 0.75rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Kalender-Heatmap */
+.heatmap-rahmen {
+  overflow-x: auto;
+  scrollbar-width: none; /* wischen statt Scrollbalken */
+}
+
+.heatmap-rahmen::-webkit-scrollbar {
+  display: none;
+}
+
+.heatmap {
+  --hm: 13px;
+  display: flex;
+  gap: 3px;
+  width: max-content;
+  padding-bottom: var(--abstand-xs);
+}
+
+.hm-spalte {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.hm-monat {
+  display: block;
+  width: var(--hm);  /* Text darf überstehen, die Spalte bleibt schmal */
+  height: 16px;
+  overflow: visible;
+  color: var(--text-3);
+  font-size: 0.6875rem;
+  white-space: nowrap;
+}
+
+/* Wochentage links bleiben beim Wischen stehen */
+.hm-beschriftung {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background: var(--flaeche);
+}
+
+.details .hm-beschriftung {
+  background: var(--flaeche);
+}
+
+.hm-beschriftung .hm-monat {
+  width: auto;
+}
+
+.hm-beschriftung span:not(.hm-monat) {
+  height: var(--hm);
+  padding-right: 4px;
+  color: var(--text-3);
+  font-size: 0.625rem;
+  line-height: var(--hm);
+}
+
+.hm-zelle {
+  display: block;
+  width: var(--hm, 13px);
+  height: var(--hm, 13px);
+  border-radius: 3px;
+  background: var(--flaeche-2);
+}
+
+.hm-zelle.leer    { opacity: 0.45; }
+.hm-zelle.zukunft { visibility: hidden; }
+.hm-zelle.stufe-1 { background: color-mix(in srgb, var(--kat) 30%, var(--flaeche-2)); }
+.hm-zelle.stufe-2 { background: color-mix(in srgb, var(--kat) 55%, var(--flaeche-2)); }
+.hm-zelle.stufe-3 { background: color-mix(in srgb, var(--kat) 80%, var(--flaeche-2)); }
+.hm-zelle.stufe-4 { background: var(--kat); }
+
+.hm-legende {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 3px;
+  margin-top: var(--abstand-s);
+  color: var(--text-3);
+  font-size: 0.6875rem;
+}
+
+.hm-legende .hm-zelle {
+  width: 11px;
+  height: 11px;
+}
+
+.hm-legende span:first-child { margin-right: 4px; }
+.hm-legende span:last-child  { margin-left: 4px; }
+
+/* Wochen-/Monatsübersicht der Kategorien */
+.zeitraum-wahl {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--abstand-s);
+  font-weight: 600;
+  font-size: var(--schrift-klein);
+}
+
+.zeitraum-wahl .icon-knopf:disabled {
+  opacity: 0.3;
+  background: transparent;
+  cursor: default;
+}
+
+.kat-liste {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.kat-zeile {
+  display: flex;
+  align-items: center;
+  gap: var(--abstand-m);
+  padding: var(--abstand-s) 0;
+  border-top: 1px solid var(--linie);
+}
+
+.kat-zeile .titel-text {
+  flex: 1;
+}
+
+.quote {
+  min-width: 42px;
+  font-weight: 600;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.tage-reihe,
+.tage-kopf {
+  display: flex;
+  gap: 3px;
+}
+
+.tage-reihe {
+  margin-top: 6px;
+}
+
+.tage-reihe .hm-zelle {
+  --hm: 16px;
+  border-radius: 4px;
+}
+
+/* Wochentags-Buchstaben über den Kästchen (gleich weit eingerückt wie die Namen) */
+.tage-kopf {
+  padding-left: calc(34px + var(--abstand-m));
+  margin-bottom: var(--abstand-xs);
+}
+
+.tage-kopf span {
+  width: 16px;
+  color: var(--text-3);
+  font-size: 0.625rem;
+  text-align: center;
+}
+
+.quote-balken {
+  width: 72px;
+  height: 6px;
+  overflow: hidden;
+  border-radius: var(--rundung-voll);
+  background: var(--flaeche-2);
+}
+
+.quote-balken span {
+  display: block;
+  height: 100%;
+  border-radius: var(--rundung-voll);
+  background: var(--kat);
+}
+
+/* Diagramm */
+.diagramm {
+  position: relative;
+  height: 210px;
+  margin-top: var(--abstand-m);
+}
+
+.verlauf-wahl {
+  min-height: 42px;
+}
+
+/* Liste der Gewohnheiten mit Serien */
+.statistik-liste {
+  margin: 0 calc(var(--abstand-s) * -1);
+  padding: 0;
+  list-style: none;
+}
+
+.statistik-liste li + li {
+  border-top: 1px solid var(--linie);
+}
+
+.statistik-zeile {
+  width: 100%;
+}
+
+.statistik-zeile > svg {
+  width: 17px;
+  height: 17px;
+  color: var(--text-3);
+}
+
+.serien {
+  display: flex;
+  gap: var(--abstand-m);
+}
+
+.serien span {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.serien svg {
+  width: 13px;
+  height: 13px;
+}
+
+/* Brennende Serie: Flamme in Ocker */
+.serien .feuer svg {
+  color: var(--farbe-ocker);
+}
+
+/* Detailansicht */
+.details {
+  display: flex;
+  flex-direction: column;
+  gap: var(--abstand-m);
+}
+
+.details .kachel {
+  padding: var(--abstand-m);
+  background: var(--hintergrund);
+  box-shadow: none;
+}
+
+.details .kachel strong {
+  font-size: 1.25rem;
+}
+
+.details-titel {
+  margin-top: var(--abstand-s);
+  font-size: var(--schrift-normal);
+  font-weight: 600;
+}
+
+.notiz-liste {
+  display: flex;
+  flex-direction: column;
+  gap: var(--abstand-s);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.notiz-liste li {
+  padding: var(--abstand-m);
+  border-radius: var(--rundung);
+  background: var(--hintergrund);
+}
+
+.notiz-liste small {
+  color: var(--text-3);
+  font-size: 0.75rem;
+}
+
 /* ---- Kurze Meldung unten ("Gespeichert") ---- */
 .meldung {
   position: fixed;
