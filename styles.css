@@ -390,7 +390,7 @@ svg.lucide {
 .ring-balken {
   stroke: var(--akzent);
   stroke-linecap: round;
-  transition: stroke-dashoffset 600ms var(--kurve);
+  transition: stroke-dashoffset 600ms var(--kurve), opacity var(--dauer-kurz) ease;
 }
 
 .ring-text {
@@ -1031,6 +1031,295 @@ input.schalter:checked::after {
   color: var(--gefahr);
   font-size: var(--schrift-klein);
   font-weight: 500;
+}
+
+/* ---- Seite "Heute" ---- */
+.heute-kopf {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--abstand-m);
+}
+
+.tag-wechsel {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin-bottom: -4px;
+}
+
+.tag-wechsel .icon-knopf:disabled {
+  opacity: 0.3;
+  background: transparent;
+  cursor: default;
+}
+
+/* Unsichtbares Datumsfeld hinter dem Kalender-Knopf */
+.datum-wahl {
+  position: relative;
+}
+
+.datum-wahl input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.nachtragen-hinweis {
+  display: flex;
+  align-items: center;
+  gap: var(--abstand-s);
+  width: 100%;
+  padding: var(--abstand-m) var(--abstand-l);
+  border: 1px dashed var(--linie);
+  border-radius: var(--rundung);
+  background: transparent;
+  color: var(--text-2);
+  font-size: var(--schrift-klein);
+  text-align: left;
+  cursor: pointer;
+}
+
+.nachtragen-hinweis svg {
+  width: 17px;
+  height: 17px;
+}
+
+.nachtragen-hinweis strong {
+  margin-left: auto;
+  color: var(--akzent-text);
+  white-space: nowrap;
+}
+
+.heute-gruppe {
+  display: flex;
+  flex-direction: column;
+  gap: var(--abstand-s);
+  margin-top: var(--abstand-xs);
+}
+
+.gruppen-kopf {
+  display: flex;
+  align-items: center;
+  gap: var(--abstand-s);
+  padding: 0 var(--abstand-xs);
+  color: var(--text-2);
+  font-size: var(--schrift-klein);
+  font-weight: 600;
+}
+
+.icon-feld.mini {
+  width: 24px;
+  height: 24px;
+}
+
+.icon-feld.mini svg {
+  width: 13px;
+  height: 13px;
+}
+
+.gruppen-zahl {
+  margin-left: auto;
+  color: var(--text-3);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.heute-liste {
+  margin: 0;
+  padding: 0 var(--abstand-m);
+  list-style: none;
+}
+
+.heute-zeile {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--abstand-xs);
+  min-height: 64px;
+  padding: var(--abstand-s) 0;
+  border-bottom: 1px solid var(--linie);
+}
+
+.heute-zeile:last-child {
+  border-bottom: 0;
+}
+
+.heute-haupt {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: var(--abstand-m);
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  text-align: left;
+}
+
+button.heute-haupt {
+  cursor: pointer;
+}
+
+.heute-haupt .titel-text {
+  flex: 1;
+}
+
+.icon-feld {
+  transition: background-color var(--dauer) var(--kurve), color var(--dauer) var(--kurve);
+}
+
+/* Geschafft: Icon-Feld wird voll eingefärbt */
+.heute-zeile.erledigt .icon-feld {
+  background: var(--kat);
+  color: #fff;
+}
+
+.notiz-vorschau {
+  overflow: hidden;
+  color: var(--text-3) !important;
+  font-style: italic;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.notiz-knopf {
+  width: 34px;
+  height: 34px;
+  color: var(--text-3);
+}
+
+.notiz-knopf svg {
+  width: 17px;
+  height: 17px;
+}
+
+.notiz-knopf.hat-notiz {
+  color: var(--kat);
+}
+
+/* Runder Haken zum Abhaken */
+.haken {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 38px;
+  height: 38px;
+  border: 2px solid var(--linie);
+  border-radius: var(--rundung-voll);
+  background: transparent;
+  color: transparent;
+  cursor: pointer;
+  transition: background-color var(--dauer) var(--kurve), border-color var(--dauer) var(--kurve), color var(--dauer-kurz) ease;
+}
+
+.haken:hover {
+  border-color: var(--kat);
+}
+
+.haken svg {
+  width: 19px;
+  height: 19px;
+  stroke-width: 3;
+}
+
+.haken.an {
+  border-color: var(--kat);
+  background: var(--kat);
+  color: #fff;
+}
+
+/* Das kleine "Plopp" beim Abhaken */
+.plopp .haken,
+.plopp .icon-feld {
+  animation: plopp 420ms var(--kurve);
+}
+
+@keyframes plopp {
+  0%   { transform: scale(0.8); }
+  45%  { transform: scale(1.14); }
+  100% { transform: scale(1); }
+}
+
+/* Zähler mit − und + */
+.zaehler {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 2px;
+  padding: 3px;
+  border-radius: var(--rundung-voll);
+  background: var(--flaeche-2);
+}
+
+.zaehler-knopf {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: var(--rundung-voll);
+  background: var(--flaeche);
+  color: var(--text);
+  box-shadow: 0 0 0 1px var(--linie);
+  cursor: pointer;
+}
+
+.zaehler-knopf:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.zaehler-knopf svg {
+  width: 16px;
+  height: 16px;
+}
+
+.zaehler-wert {
+  min-width: 26px;
+  font-weight: 600;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Zahlenfeld */
+.eingabe.zahl-feld {
+  flex-shrink: 0;
+  width: 84px;
+  min-height: 40px;
+  padding: 0 var(--abstand-s);
+  border-radius: var(--rundung-klein);
+  font-weight: 600;
+  text-align: center;
+}
+
+/* Dünner Balken unten: wie weit zum Tagesziel */
+.zeilen-balken {
+  position: absolute;
+  left: 52px;
+  right: 0;
+  bottom: -1px;
+  height: 2px;
+}
+
+.zeilen-balken::before {
+  content: '';
+  display: block;
+  width: calc(var(--anteil) * 100%);
+  height: 100%;
+  border-radius: 2px;
+  background: var(--kat);
+}
+
+/* Mehrzeiliges Textfeld (Notizen) */
+.eingabe.textfeld {
+  min-height: 120px;
+  padding: var(--abstand-m);
+  line-height: 1.5;
+  resize: vertical;
 }
 
 /* ---- Kurze Meldung unten ("Gespeichert") ---- */

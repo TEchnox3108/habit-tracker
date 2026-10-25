@@ -5,7 +5,7 @@
      - einstellungen: Hell/Dunkel, Wochenstart
      - kategorien:    Liste der Kategorien (Reihenfolge = Anzeige)
      - gewohnheiten:  Liste aller Gewohnheiten (Reihenfolge = Anzeige)
-     - eintraege:     was du an welchem Tag erledigt hast (ab Phase 3)
+     - eintraege:     was du an welchem Tag erledigt hast
    Der Browser merkt es sich im "localStorage" – das ist ein
    kleiner Speicher im Browser, der auch nach dem Schließen bleibt.
 
@@ -187,6 +187,86 @@ const Daten = {
     });
     this.zustand.gewohnheiten = sortieren(this.zustand.gewohnheiten, zuordnung.map(z => z.id));
     this.speichern();
+  },
+
+
+  /* ---------- Einträge (was an welchem Tag erledigt wurde) ----------
+     Gespeichert als eintraege["2026-10-25"][gewohnheitId] = { wert, notiz }
+     - wert: Abhaken → 1 (erledigt), Zähler/Zahl → die Zahl
+     - notiz: kurzer Text zu diesem Tag (optional) */
+
+  eintrag(tag, gewohnheitId) {
+    return (this.zustand.eintraege[tag] || {})[gewohnheitId];
+  },
+
+  // Der eingetragene Wert oder null, wenn nichts eingetragen ist
+  wert(tag, gewohnheitId) {
+    const e = this.eintrag(tag, gewohnheitId);
+    return e && typeof e.wert === 'number' ? e.wert : null;
+  },
+
+  wertSetzen(tag, gewohnheitId, wert) {
+    this._eintragAendern(tag, gewohnheitId, { wert });
+  },
+
+  notizSetzen(tag, gewohnheitId, notiz) {
+    this._eintragAendern(tag, gewohnheitId, { notiz });
+  },
+
+  _eintragAendern(tag, gewohnheitId, aenderung) {
+    const eintraege = this.zustand.eintraege;
+    const tagDaten = eintraege[tag] || (eintraege[tag] = {});
+    const e = { ...tagDaten[gewohnheitId], ...aenderung };
+    if (e.wert == null) delete e.wert;
+    if (!e.notiz) delete e.notiz;
+    // Leere Einträge gar nicht erst aufheben
+    if (Object.keys(e).length) tagDaten[gewohnheitId] = e;
+    else delete tagDaten[gewohnheitId];
+    if (Object.keys(tagDaten).length === 0) delete eintraege[tag];
+    this.speichern();
+  },
+
+
+  /* ---------- Auswertung ---------- */
+
+  // Hat man die Gewohnheit an diesem Tag geschafft?
+  istErledigt(g, tag) {
+    const w = this.wert(tag, g.id);
+    if (w === null) return false;
+    if (g.typ === 'janein') return w >= 1;                   // abgehakt (bzw. vermieden)
+    if (g.richtung === 'negativ') return w <= (g.ziel ?? 0); // nicht über dem Höchstwert
+    return g.ziel != null ? w >= g.ziel : w > 0;             // Ziel erreicht (ohne Ziel: irgendwas eingetragen)
+  },
+
+  // Wie weit ist man an diesem Tag? 0 bis 1 (für den Fortschrittsring)
+  // Bei Zählern/Zahlen mit Ziel zählt auch Teil-Fortschritt, z. B. 6 von 8 Gläsern = 0,75
+  fortschritt(g, tag) {
+    if (this.istErledigt(g, tag)) return 1;
+    const w = this.wert(tag, g.id);
+    if (g.typ !== 'janein' && g.richtung === 'positiv' && g.ziel && w) return Math.min(w / g.ziel, 1);
+    return 0;
+  },
+
+  // Wie oft wurde die Gewohnheit in der Woche dieses Datums geschafft?
+  wochenErledigt(g, datum, ohneTag = null) {
+    return Datum.wocheVon(datum)
+      .map(d => Datum.schluessel(d))
+      .filter(tag => tag !== ohneTag && this.istErledigt(g, tag))
+      .length;
+  },
+
+  // Ist die Gewohnheit an diesem Datum dran?
+  istFaellig(g, datum) {
+    const kategorie = this.kategorie(g.kategorieId);
+    if (g.ausgeblendet || !kategorie || kategorie.ausgeblendet) return false;
+    const h = g.haeufigkeit;
+    if (h.art === 'wochentage') return h.tage.includes(datum.getDay());
+    if (h.art === 'proWoche') {
+      // Jeden Tag zeigen, bis das Wochenziel erreicht ist (an erledigten Tagen immer)
+      const tag = Datum.schluessel(datum);
+      return this.istErledigt(g, tag) || this.wochenErledigt(g, datum, tag) < h.anzahl;
+    }
+    return true;
   }
 };
 
@@ -200,6 +280,33 @@ const Datum = {
   wochenReihenfolge() {
     const start = Daten.einstellung('wochenstart');
     return [0, 1, 2, 3, 4, 5, 6].map(i => (start + i) % 7);
+  },
+
+  // Heute, 0:00 Uhr
+  heute() {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    return d;
+  },
+
+  // Datum + n Tage (n darf auch negativ sein)
+  plusTage(datum, n) {
+    const d = new Date(datum);
+    d.setDate(d.getDate() + n);
+    return d;
+  },
+
+  // Die 7 Tage der Woche, in der das Datum liegt (ab Wochenstart)
+  wocheVon(datum) {
+    const versatz = (datum.getDay() - Daten.einstellung('wochenstart') + 7) % 7;
+    const start = this.plusTage(datum, -versatz);
+    return [0, 1, 2, 3, 4, 5, 6].map(i => this.plusTage(start, i));
+  },
+
+  // Aus "2026-10-25" wieder ein Datum machen
+  ausSchluessel(schluessel) {
+    const [j, m, t] = schluessel.split('-').map(Number);
+    return new Date(j, m - 1, t);
   },
 
   // "Schlüssel" für einen Tag, z. B. "2026-10-25" (zum Speichern)

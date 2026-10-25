@@ -4,7 +4,7 @@
    Inhalt:
    1. Kleine Helfer (Icons, Texte, Bausteine)
    2. Dark/Light Mode
-   3. Die Seiten (Heute, Statistik, Gewohnheiten)
+   3. Die Seiten (Statistik – die anderen haben eigene Dateien)
    4. Navigation zwischen den Seiten
    5. Start der App
    ========================================================= */
@@ -169,19 +169,25 @@ function bestaetigen(text, knopfText = 'Löschen') {
 }
 
 // Fortschrittsring (prozent = 0 bis 100)
+const RING_UMFANG = 2 * Math.PI * 50;
 function fortschrittsRing(prozent) {
-  const radius = 50;
-  const umfang = 2 * Math.PI * radius;
-  const versatz = umfang * (1 - prozent / 100);
   return `
-    <div class="ring" role="img" aria-label="${Math.round(prozent)} Prozent erledigt">
+    <div class="ring" role="img">
       <svg viewBox="0 0 120 120">
-        <circle class="ring-spur" cx="60" cy="60" r="${radius}"></circle>
-        ${prozent > 0 ? `<circle class="ring-balken" cx="60" cy="60" r="${radius}"
-            stroke-dasharray="${umfang}" stroke-dashoffset="${versatz}"></circle>` : ''}
+        <circle class="ring-spur" cx="60" cy="60" r="50"></circle>
+        <circle class="ring-balken" cx="60" cy="60" r="50" stroke-dasharray="${RING_UMFANG}"></circle>
       </svg>
-      <div class="ring-text"><strong>${Math.round(prozent)}%</strong><span>erledigt</span></div>
+      <div class="ring-text"><strong></strong><span>erledigt</span></div>
     </div>`;
+}
+
+// Stellt einen vorhandenen Ring auf einen neuen Wert (mit sanfter Bewegung)
+function ringSetzen(ring, prozent) {
+  const balken = ring.querySelector('.ring-balken');
+  balken.style.strokeDashoffset = RING_UMFANG * (1 - prozent / 100);
+  balken.style.opacity = prozent > 0 ? 1 : 0; // bei 0 % keinen Punkt zeigen
+  ring.querySelector('strong').textContent = `${Math.round(prozent)}%`;
+  ring.setAttribute('aria-label', `${Math.round(prozent)} Prozent erledigt`);
 }
 
 
@@ -214,26 +220,10 @@ Design.anwenden();
 /* ---------- 3. Die Seiten ----------
    Jede Seite hat einen Titel und eine Funktion "anzeigen",
    die den Inhalt in ihren Bereich schreibt.
-   Die Seite "Gewohnheiten" steht in habits.js,
+   Die Seite "Heute" steht in today.js,
+   die Seite "Gewohnheiten" in habits.js,
    die Seite "Einstellungen" in settings.js. */
 const Seiten = {
-  heute: {
-    titel: 'Heute',
-    anzeigen(bereich) {
-      bereich.innerHTML = `
-        ${seitenKopf('Heute', Datum.lang(new Date()))}
-        <section class="karte ring-karte">
-          ${fortschrittsRing(0)}
-          <div>
-            <h2 class="karten-titel">Dein Tag</h2>
-            <p class="karten-text">Sobald du Gewohnheiten hast, siehst du hier, wie viel du heute schon geschafft hast.</p>
-          </div>
-        </section>
-        ${platzhalter('sun', 'Hier erscheinen deine Gewohnheiten',
-          'In Phase 3 kannst du hier alles, was heute dran ist, mit einem Tipp abhaken.')}`;
-    }
-  },
-
   statistik: {
     titel: 'Statistik',
     anzeigen(bereich) {

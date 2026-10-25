@@ -27,15 +27,17 @@ Testen: Der eingebaute Browser zeigt `file://`-Seiten nur als Schnappschuss ohne
 | `index.html` | Gerüst: Navigation + vier `<section class="seite">` (heute, statistik, gewohnheiten, einstellungen) |
 | `styles.css` | Gesamtes Aussehen. **Abschnitt 1 enthält alle Design-Variablen** (Farben, Schrift, Abstände, Rundungen) – Design nur dort ändern |
 | `config.js` | `KONFIG`: App-Name, Version, Farbauswahl, Icon-Auswahl, `startKategorien` (12 Kategorien mit Beispiel-Gewohnheiten, nur beim allerersten Start verwendet) |
-| `data.js` | `Daten` (Laden/Speichern von `Daten.zustand`, CRUD für Kategorien/Gewohnheiten, `gewohnheitVorlage()` mit allen Standardfeldern, `reihenfolgeUebernehmen()` nach Drag & Drop) und `Datum` (deutsche Formate, Tages-Schlüssel `JJJJ-MM-TT`, Wochentage je nach Wochenstart). `Daten.laden()` steht ganz unten, weil es `Datum` braucht |
-| `app.js` | Helfer (`esc`, `icon`, `iconsZeichnen`, `seitenKopf`, `platzhalter`, `auswahlGruppe`, `radioGruppe`, `schalter`, `zahl`, `zahlLesen`, `meldung`, `Dialog`, `bestaetigen`, `fortschrittsRing`), `Design` (Hell/Dunkel), Registry `Seiten` (Heute, Statistik), `Navigation`, Start |
+| `data.js` | `Daten` (Laden/Speichern von `Daten.zustand`, CRUD für Kategorien/Gewohnheiten, `gewohnheitVorlage()` mit allen Standardfeldern, `reihenfolgeUebernehmen()` nach Drag & Drop, Einträge `wert`/`wertSetzen`/`notizSetzen`, **Auswertung** `istErledigt`/`fortschritt`/`wochenErledigt`/`istFaellig` – Statistik in Phase 4 soll diese wiederverwenden) und `Datum` (deutsche Formate, Tages-Schlüssel `JJJJ-MM-TT`, `heute`, `plusTage`, `wocheVon`, `ausSchluessel`). `Daten.laden()` steht ganz unten, weil es `Datum` braucht |
+| `app.js` | Helfer (`esc`, `icon`, `iconsZeichnen`, `seitenKopf`, `platzhalter`, `auswahlGruppe`, `radioGruppe`, `schalter`, `zahl`, `zahlLesen`, `meldung`, `Dialog`, `bestaetigen`, `fortschrittsRing` + `ringSetzen`), `Design` (Hell/Dunkel), Registry `Seiten` (Statistik), `Navigation`, Start |
+| `today.js` | `Heute` + `Seiten.heute`: fällige Gewohnheiten nach Kategorie, Abhaken/Zähler/Zahlenfeld, Notiz-Dialog, Tageswechsel (nicht in die Zukunft), Fortschrittsring. Nach einer Eingabe wird nur die Zeile ersetzt (`zeileNeu`) + `zusammenfassungAktualisieren()`, damit Ring-/Plopp-Animationen laufen |
 | `habits.js` | `Seiten.gewohnheiten`: Liste, Formulare für Kategorie/Gewohnheit, Drag & Drop (SortableJS mit `forceFallback`), Texte wie `gewohnheitBeschreibung()`/`haeufigkeitText()` |
 | `settings.js` | `Seiten.einstellungen` |
 
 Datenmodell (`Daten.zustand`):
 - `kategorien: [{ id, name, farbe, icon, ausgeblendet }]` – Array-Reihenfolge = Anzeige-Reihenfolge
 - `gewohnheiten: [{ id, kategorieId, name, icon, typ: 'janein'|'zaehler'|'zahl', ziel (Zahl oder null; bei negativ = Höchstwert), einheit, richtung: 'positiv'|'negativ', haeufigkeit: { art: 'taeglich'|'wochentage'|'proWoche', tage: [0–6, 0 = So], anzahl }, ausgeblendet, erstellt }]` – Farbe kommt immer von der Kategorie
-- `eintraege: { 'JJJJ-MM-TT': { [gewohnheitId]: … } }` – Format wird in Phase 3 festgelegt; beim Löschen einer Gewohnheit werden ihre Einträge mit entfernt
+- `eintraege: { 'JJJJ-MM-TT': { [gewohnheitId]: { wert?, notiz? } } }` – `wert` ist immer eine Zahl (Abhaken: 1 = erledigt/vermieden; Zähler/Zahl: der Wert); kein Wert = nichts eingetragen. Leere Einträge/Tage werden entfernt; beim Löschen einer Gewohnheit verschwinden ihre Einträge mit
+- Fälligkeit hängt nicht vom Erstelldatum ab (damit man auch vor dem Anlegen nachtragen kann).
 - Neue Felder immer mit Standardwert in `standard()` bzw. `gewohnheitVorlage()` ergänzen, damit alte gespeicherte Daten weiter funktionieren.
 
 Zusammenspiel:
@@ -52,7 +54,7 @@ Matt und ruhig: keine Verläufe, kein Glanz, keine Neonfarben; gedämpfte Palett
 ## Phasen (Stand)
 1. ✅ Grundgerüst, Design-System, Dark/Light, Navigation
 2. ✅ Kategorien & Gewohnheiten anlegen/bearbeiten/löschen/ausblenden/sortieren (12 Start-Kategorien mit Beispielen), Speichern
-3. „Heute“: Abhaken, Zähler, Zahlen mit Einheit, Notiz, Fortschrittsring, vergangene Tage nachtragen
+3. ✅ „Heute“: Abhaken, Zähler, Zahlen mit Einheit, Notiz, Fortschrittsring (mit Teil-Fortschritt bei Zielen), vergangene Tage nachtragen
 4. Statistik: Streaks, Heatmap, Wochen/Monat pro Kategorie, Chart.js-Diagramme, Erfolgsquote
 5. Export/Import (JSON), Zurücksetzen, PWA (manifest + sw.js), Feinschliff, README.md
 
