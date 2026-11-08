@@ -45,6 +45,210 @@ function auswahlFrage(text, optionen) {
 }
 
 
+/* ---------- Auswahl des Kalenders (farbige Knöpfe) ----------
+   neuerKalender: Name eines #Tags, für den es noch keinen Kalender gibt */
+function kalenderWahlHtml(kalId, neuerKalender = null) {
+  const knoepfe = KalenderDaten.kalenderListe().map(k => `
+    <label class="kal-wahl" style="--kat: var(--farbe-${k.farbe})">
+      <input type="radio" name="kalender" value="${k.id}" ${k.id === kalId && !neuerKalender ? 'checked' : ''}>
+      <span><i></i>${esc(k.name)}</span>
+    </label>`).join('');
+  const neu = neuerKalender ? `
+    <label class="kal-wahl" style="--kat: var(--text-3)">
+      <input type="radio" name="kalender" value="__neu__" checked>
+      <span><i></i>Neu: ${esc(neuerKalender)}</span>
+    </label>` : '';
+  return `<div class="kal-kalenderwahl">${knoepfe}${neu}</div>`;
+}
+
+
+/* =========================================================
+   Suche über alle Termine und Projekte
+   ========================================================= */
+const KalenderSuche = {
+  text: '',
+
+  oeffnen() {
+    const dialog = Dialog.oeffnen('Suchen', `
+      <div class="kal-suche">
+        <div class="kal-schnell">
+          <span class="kal-schnell-icon">${icon('search')}</span>
+          <input class="eingabe" type="search" name="suche" value="${esc(this.text)}"
+                 placeholder="Titel, Ort, Notiz oder Kalender" autocomplete="off" aria-label="Suchen">
+        </div>
+        <div data-treffer></div>
+      </div>`);
+    const feld = dialog.querySelector('[name="suche"]');
+    feld.oninput = () => { this.text = feld.value; this.trefferZeichnen(dialog); };
+    this.trefferZeichnen(dialog);
+    feld.focus();
+    feld.select();
+
+    dialog.querySelector('[data-treffer]').onclick = e => {
+      const t = e.target.closest('[data-termin]');
+      if (t) return TerminDetail.oeffnen(t.dataset.termin, t.dataset.am);
+      const p = e.target.closest('[data-projekt]');
+      if (p) ProjektDetail.oeffnen(p.dataset.projekt);
+    };
+  },
+
+  trefferZeichnen(dialog) {
+    const platz = dialog.querySelector('[data-treffer]');
+    if (!this.text.trim()) {
+      platz.innerHTML = '<p class="karten-text kal-suche-hinweis">Durchsucht alle Termine und Projekte – auch in ausgeblendeten Kalendern.</p>';
+      return;
+    }
+    const { termine, projekte } = KalenderDaten.suchen(this.text);
+    if (!termine.length && !projekte.length) {
+      platz.innerHTML = '<p class="karten-text kal-suche-hinweis">Nichts gefunden.</p>';
+      return;
+    }
+    const terminZeile = ({ termin: t, tag, kommend }) => {
+      const k = KalenderDaten.kalenderVon(t);
+      const v = TerminDetail.vorkommen(t, tag);
+      const zeit = t.ganztaegig ? 'ganztägig' : `${t.start} – ${t.ende}`;
+      const unter = [`${Projekte.datumText(v.datum)}`, zeit];
+      if (t.wiederholung.art !== 'keine') unter.push(QuickAdd.wiederholungText(t.wiederholung));
+      if (t.ort) unter.push(t.ort);
+      return `
+        <button type="button" class="kal-zeile ${kommend ? '' : 'vergangen'}" style="${Kalender.farbe(k)}" data-termin="${t.id}" data-am="${tag}">
+          <span class="kal-strich"></span>
+          <span class="titel-text"><strong>${esc(t.titel)}</strong><small>${esc(unter.join(' · '))}</small></span>
+        </button>`;
+    };
+    const projektZeile = p => {
+      const f = Projekte.frist(p);
+      return `
+        <button type="button" class="kal-zeile" style="${Kalender.farbe(KalenderDaten.kalenderVon(p))}" data-projekt="${p.id}">
+          <span class="kal-strich"></span>
+          <span class="titel-text"><strong>${esc(p.titel)}</strong><small>Projekt · ${esc(f.text)}</small></span>
+          <span class="kal-zeile-icon">${icon('folder-kanban')}</span>
+        </button>`;
+    };
+    const kommend = termine.filter(t => t.kommend);
+    const vorbei = termine.filter(t => !t.kommend);
+    platz.innerHTML = `
+      ${kommend.length ? `<h3 class="kal-abschnitt">Kommende Termine</h3><div class="kal-zeilen">${kommend.map(terminZeile).join('')}</div>` : ''}
+      ${projekte.length ? `<h3 class="kal-abschnitt">Projekte</h3><div class="kal-zeilen">${projekte.map(projektZeile).join('')}</div>` : ''}
+      ${vorbei.length ? `<h3 class="kal-abschnitt">Vergangen</h3><div class="kal-zeilen">${vorbei.map(terminZeile).join('')}</div>` : ''}`;
+    iconsZeichnen();
+  }
+};
+
+
+/* =========================================================
+   Kalender verwalten (wie bei Apple: ein-/ausblenden, Farbe …)
+   ========================================================= */
+const KalenderVerwaltung = {
+  oeffnen() {
+    const b = KalenderDaten.bereich;
+    const zeilen = KalenderDaten.kalenderListe().map(k => {
+      const termine = b.termine.filter(t => t.kalenderId === k.id).length;
+      const projekte = b.projekte.filter(p => p.kalenderId === k.id).length;
+      const info = [`${termine} Termin${termine === 1 ? '' : 'e'}`];
+      if (projekte) info.push(`${projekte} Projekt${projekte === 1 ? '' : 'e'}`);
+      if (b.standardKalender === k.id) info.push('Standard');
+      return `
+        <div class="kal-verw-zeile ${k.ausgeblendet ? 'aus' : ''}" style="--kat: var(--farbe-${k.farbe})">
+          <button type="button" class="kal-verw-name" data-kal-bearbeiten="${k.id}">
+            <span class="icon-feld">${icon(k.icon)}</span>
+            <span class="titel-text"><strong>${esc(k.name)}</strong><small>${info.join(' · ')}</small></span>
+          </button>
+          <input type="checkbox" class="schalter" data-kal-sichtbar="${k.id}" ${k.ausgeblendet ? '' : 'checked'}
+                 aria-label="${esc(k.name)} anzeigen">
+        </div>`;
+    }).join('');
+
+    const dialog = Dialog.oeffnen('Kalender', `
+      <div class="kal-verwaltung">
+        <p class="karten-text">Schalter aus = Kalender ausblenden. Die Termine bleiben gespeichert. Tippe auf einen Namen, um Farbe, Icon oder Namen zu ändern.</p>
+        <div class="kal-verw-liste">${zeilen}</div>
+        <button type="button" class="knopf gestrichelt breit" data-kal-neu>${icon('plus')}<span>Neuer Kalender</span></button>
+      </div>`);
+
+    dialog.querySelectorAll('[data-kal-sichtbar]').forEach(el => {
+      el.onchange = () => {
+        KalenderDaten.kalenderSpeichern({ id: el.dataset.kalSichtbar, ausgeblendet: !el.checked });
+        el.closest('.kal-verw-zeile').classList.toggle('aus', !el.checked);
+        Kalender.neuZeichnen();
+      };
+    });
+    dialog.querySelectorAll('[data-kal-bearbeiten]').forEach(el => {
+      el.onclick = () => this.formular(el.dataset.kalBearbeiten);
+    });
+    dialog.querySelector('[data-kal-neu]').onclick = () => this.formular(null);
+  },
+
+  formular(id) {
+    const b = KalenderDaten.bereich;
+    const vorhanden = id ? KalenderDaten.kalender(id) : null;
+    const benutzt = b.kalender.map(k => k.farbe);
+    const k = vorhanden || {
+      name: '', icon: 'calendar', ausgeblendet: false,
+      farbe: (KONFIG.farben.find(f => !benutzt.includes(f.id)) || KONFIG.farben[0]).id
+    };
+    const istStandard = vorhanden && b.standardKalender === vorhanden.id;
+
+    const dialog = Dialog.oeffnen(vorhanden ? 'Kalender bearbeiten' : 'Neuer Kalender', `
+      <form class="formular" style="--kat: var(--farbe-${k.farbe})" novalidate>
+        <label class="feld">
+          <span class="feld-titel">Name</span>
+          <input class="eingabe" name="titel" maxlength="30" value="${esc(k.name)}" placeholder="z. B. Verein" autocomplete="off">
+          <small class="hinweis">Im Quick Add erreichst du ihn mit #Name.</small>
+        </label>
+        <div class="feld"><span class="feld-titel">Farbe</span>${farbAuswahl(k.farbe)}</div>
+        <div class="feld"><span class="feld-titel">Icon</span>${iconAuswahl(k.icon)}</div>
+        ${schalter('standard', 'Standard-Kalender', 'Neue Termine ohne #Tag landen hier.', istStandard)}
+        <p class="fehler" hidden></p>
+        <div class="formular-knoepfe">
+          <button type="button" class="knopf zweit" data-zurueck>${icon('chevron-left')}<span>Zurück</span></button>
+          ${vorhanden && b.kalender.length > 1 ? `<button type="button" class="knopf gefahr" data-loeschen aria-label="Löschen">${icon('trash-2')}</button>` : ''}
+          <button type="submit" class="knopf">${icon('check')}<span>Speichern</span></button>
+        </div>
+      </form>`);
+
+    const form = dialog.querySelector('form');
+    const f = form.elements;
+    form.addEventListener('change', e => {
+      if (e.target.name === 'farbe') form.style.setProperty('--kat', `var(--farbe-${e.target.value})`);
+    });
+    form.querySelector('[data-zurueck]').onclick = () => this.oeffnen();
+
+    form.addEventListener('submit', e => {
+      e.preventDefault();
+      const name = f.titel.value.trim();
+      if (!name) return formularFehler(form, 'Bitte gib einen Namen ein.');
+      const doppelt = b.kalender.find(x => x.name.toLowerCase() === name.toLowerCase() && x.id !== id);
+      if (doppelt) return formularFehler(form, 'Einen Kalender mit diesem Namen gibt es schon.');
+      KalenderDaten.kalenderSpeichern({ id, name, farbe: f.farbe.value, icon: f.icon.value });
+      const gespeichert = id ? KalenderDaten.kalender(id) : b.kalender[b.kalender.length - 1];
+      if (f.standard.checked) b.standardKalender = gespeichert.id;
+      else if (b.standardKalender === gespeichert.id) b.standardKalender = b.kalender.find(x => x.id !== gespeichert.id)?.id || gespeichert.id;
+      Daten.speichern();
+      Kalender.neuZeichnen();
+      meldung(vorhanden ? 'Gespeichert' : 'Kalender angelegt');
+      this.oeffnen();
+    });
+
+    const loeschen = form.querySelector('[data-loeschen]');
+    if (loeschen) loeschen.onclick = async () => {
+      const termine = b.termine.filter(t => t.kalenderId === id).length;
+      const projekte = b.projekte.filter(p => p.kalenderId === id).length;
+      const ziel = KalenderDaten.kalender(b.standardKalender === id ? b.kalender.find(x => x.id !== id).id : b.standardKalender);
+      const was = [termine ? `${termine} Termin${termine === 1 ? '' : 'e'}` : '', projekte ? `${projekte} Projekt${projekte === 1 ? '' : 'e'}` : ''].filter(Boolean).join(' und ');
+      const text = was
+        ? `Kalender „${k.name}“ löschen? Seine ${was} kommen in den Kalender „${ziel.name}“.`
+        : `Kalender „${k.name}“ löschen?`;
+      if (!await bestaetigen(text)) return;
+      KalenderDaten.kalenderLoeschen(id);
+      Kalender.neuZeichnen();
+      meldung('Gelöscht');
+      this.oeffnen();
+    };
+  }
+};
+
+
 /* =========================================================
    Detailansicht
    ========================================================= */
@@ -214,15 +418,6 @@ const TerminFormular = {
         <span>${Datum.WOCHENTAGE_KURZ[d]}</span>
       </label>`).join('');
 
-    const kalenderListe = KalenderDaten.kalenderListe().map(k => `
-      <label class="kal-wahl" style="--kat: var(--farbe-${k.farbe})">
-        <input type="radio" name="kalender" value="${k.id}" ${k.id === kalId ? 'checked' : ''}>
-        <span><i></i>${esc(k.name)}</span>
-      </label>`).join('') + (neuerKalender ? `
-      <label class="kal-wahl" style="--kat: var(--text-3)">
-        <input type="radio" name="kalender" value="__neu__" checked>
-        <span><i></i>Neu: ${esc(neuerKalender)}</span>
-      </label>` : '');
 
     const k = KalenderDaten.kalender(kalId);
     const dialog = Dialog.oeffnen(titel || (vorhanden ? 'Termin bearbeiten' : 'Neuer Termin'), `
@@ -270,7 +465,7 @@ const TerminFormular = {
 
         <div class="feld">
           <span class="feld-titel">Kalender</span>
-          <div class="kal-kalenderwahl">${kalenderListe}</div>
+          ${kalenderWahlHtml(kalId, neuerKalender)}
         </div>
 
         <label class="feld">

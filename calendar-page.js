@@ -16,6 +16,8 @@
    ========================================================= */
 
 const Kalender = {
+  bereichWahl: 'kalender',   // 'kalender' | 'anstehend' | 'projekte'
+  anstehendTage: 60,         // so viele Tage zeigt „Anstehend“ (wird mit „Weitere“ größer)
   ansicht: 'monat',          // 'tag' | 'woche' | 'monat' | 'jahr'
   datum: Datum.heute(),      // Tag, um den sich die Ansicht dreht
   vorschau: null,            // Quick-Add: { satz, e } (Ergebnis von QuickAdd.parse)
@@ -75,7 +77,11 @@ const Kalender = {
     bereich.innerHTML = `
       <header class="seiten-kopf kal-kopf">
         <h1 data-titel></h1>
-        <button type="button" class="icon-knopf kal-plus" data-aktion="neu" aria-label="Neuer Termin">${icon('plus')}</button>
+        <div class="kal-kopf-knoepfe">
+          <button type="button" class="icon-knopf" data-aktion="suche" aria-label="Suchen" title="Suchen">${icon('search')}</button>
+          <button type="button" class="icon-knopf" data-aktion="kalender-verwalten" aria-label="Kalender verwalten" title="Kalender verwalten">${icon('layers')}</button>
+          <button type="button" class="icon-knopf kal-plus" data-aktion="neu" aria-label="Neu" title="Neu">${icon('plus')}</button>
+        </div>
       </header>
 
       <form class="kal-schnell" data-schnell autocomplete="off">
@@ -85,14 +91,22 @@ const Kalender = {
       </form>
       <div data-vorschau></div>
 
-      ${auswahlGruppe('ansicht', [
-        { wert: 'tag', text: 'Tag' },
-        { wert: 'woche', text: 'Woche' },
-        { wert: 'monat', text: 'Monat' },
-        { wert: 'jahr', text: 'Jahr' }
-      ], this.ansicht)}
+      ${auswahlGruppe('bereich', [
+        { wert: 'kalender', text: 'Kalender', icon: 'calendar-days' },
+        { wert: 'anstehend', text: 'Anstehend', icon: 'list' },
+        { wert: 'projekte', text: 'Projekte', icon: 'folder-kanban' }
+      ], this.bereichWahl)}
 
-      <div class="kal-leiste">
+      <div class="kal-ansichten" data-nur-kalender>
+        ${auswahlGruppe('ansicht', [
+          { wert: 'tag', text: 'Tag' },
+          { wert: 'woche', text: 'Woche' },
+          { wert: 'monat', text: 'Monat' },
+          { wert: 'jahr', text: 'Jahr' }
+        ], this.ansicht)}
+      </div>
+
+      <div class="kal-leiste" data-nur-kalender>
         <span class="kal-leiste-text" data-leiste></span>
         <div class="kal-blaettern">
           <button type="button" class="icon-knopf" data-aktion="zurueck" aria-label="Zurück">${icon('chevron-left')}</button>
@@ -147,33 +161,137 @@ const Kalender = {
 
     clearInterval(this.uhr);
     const ansicht = b.querySelector('[data-ansicht]');
-    const inhalt = {
-      tag: () => this.tagHtml(),
-      woche: () => this.wocheHtml(),
-      monat: () => this.monatHtml(),
-      jahr: () => this.jahrHtml()
-    }[this.ansicht]();
+    const imKalender = this.bereichWahl === 'kalender';
+    let inhalt;
+    if (this.bereichWahl === 'anstehend') inhalt = this.anstehendHtml();
+    else if (this.bereichWahl === 'projekte') inhalt = Projekte.listeHtml();
+    else {
+      inhalt = {
+        tag: () => this.tagHtml(),
+        woche: () => this.wocheHtml(),
+        monat: () => this.monatHtml(),
+        jahr: () => this.jahrHtml()
+      }[this.ansicht]();
+    }
 
     ansicht.innerHTML = inhalt;
     ansicht.className = 'kal-ansicht' + (richtung > 0 ? ' kal-rein-vor' : richtung < 0 ? ' kal-rein-zurueck' : '');
 
     b.querySelector('[data-titel]').textContent = this.titelText();
-    b.querySelector('[data-leiste]').textContent = this.leisteText();
-    b.querySelectorAll('[data-name="ansicht"] .auswahl-knopf').forEach(k => {
-      const aktiv = k.dataset.wert === this.ansicht;
-      k.classList.toggle('aktiv', aktiv);
-      k.setAttribute('aria-pressed', aktiv);
-    });
+    b.querySelector('[data-leiste]').textContent = imKalender ? this.leisteText() : '';
+    b.querySelectorAll('[data-nur-kalender]').forEach(el => { el.hidden = !imKalender; });
+    const knopfMarkieren = (gruppe, wert) => {
+      b.querySelectorAll(`[data-name="${gruppe}"] .auswahl-knopf`).forEach(k => {
+        const aktiv = k.dataset.wert === wert;
+        k.classList.toggle('aktiv', aktiv);
+        k.setAttribute('aria-pressed', aktiv);
+      });
+    };
+    knopfMarkieren('ansicht', this.ansicht);
+    knopfMarkieren('bereich', this.bereichWahl);
+    const plus = b.querySelector('[data-aktion="neu"]');
+    plus.setAttribute('aria-label', this.bereichWahl === 'projekte' ? 'Neues Projekt' : 'Neuer Termin');
+    plus.title = plus.getAttribute('aria-label');
 
-    if (this.ansicht === 'tag' || this.ansicht === 'woche') this.rasterEinrichten();
-    this.wischenEinrichten(ansicht);
+    if (imKalender && (this.ansicht === 'tag' || this.ansicht === 'woche')) this.rasterEinrichten();
+    if (imKalender) this.wischenEinrichten(ansicht);
+    else { ansicht.ontouchstart = null; ansicht.ontouchend = null; }
     iconsZeichnen();
 
-    // Neu angelegten Termin kurz hervorheben
+    // Neu angelegten Termin/Projekt kurz hervorheben
     if (this.neuId) {
-      b.querySelectorAll(`[data-termin="${this.neuId}"]`).forEach(el => el.classList.add('kal-neu'));
+      b.querySelectorAll(`[data-termin="${this.neuId}"], [data-projekt="${this.neuId}"]`).forEach(el => el.classList.add('kal-neu'));
       this.neuId = null;
     }
+  },
+
+  // Nach dem Anlegen/Ändern eines Projekts: Projekt-Übersicht zeigen und es hervorheben
+  projektGezeigt(p) {
+    if (Navigation.aktuelle !== 'kalender') return;
+    this.bereichWahl = 'projekte';
+    this.neuId = p.id;
+    this.ansichtNeu();
+  },
+
+  /* Termine + Projekt-Deadlines eines Zeitraums in einer Liste.
+     Deadlines sehen aus wie ganztägige Termine, haben aber „deadline: true“. */
+  alleVorkommen(von, bis) {
+    const deadlines = KalenderDaten.deadlines(von, bis).map(d => ({
+      deadline: true,
+      projekt: d.projekt,
+      schluessel: 'p@' + d.projekt.id,
+      termin: { id: d.projekt.id, titel: d.projekt.titel, wiederholung: { art: 'keine' }, ort: '' },
+      datum: d.datum,
+      endDatum: d.datum,
+      ganztaegig: true,
+      start: null,
+      ende: null,
+      kalender: d.kalender
+    }));
+    return [...deadlines, ...KalenderDaten.vorkommen(von, bis)].sort((a, b) =>
+      a.datum.localeCompare(b.datum) || (b.ganztaegig - a.ganztaegig)
+      || String(a.start).localeCompare(String(b.start)));
+  },
+
+  // Klick-Ziel eines Eintrags: Termin (mit Tag) oder Projekt
+  zielAttr(v) {
+    return v.deadline ? `data-projekt="${v.projekt.id}"` : `data-termin="${v.termin.id}" data-am="${v.datum}"`;
+  },
+
+
+  /* =========================================================
+     Liste „Anstehend“: alles Kommende chronologisch
+     ========================================================= */
+  anstehendHtml() {
+    const heute = this.key(Datum.heute());
+    const bis = KalenderDaten.plusTage(heute, this.anstehendTage - 1);
+    const liste = this.alleVorkommen(heute, bis).filter(v => v.endDatum >= heute);
+
+    // Nach Tagen gruppieren (schon laufende mehrtägige Termine erscheinen unter „Heute“)
+    const tage = new Map();
+    liste.forEach(v => {
+      const tag = v.datum < heute ? heute : v.datum;
+      if (!tage.has(tag)) tage.set(tag, []);
+      tage.get(tag).push(v);
+    });
+
+    // Überfällige Projekte ganz oben
+    const ueberfaellig = KalenderDaten.bereich.projekte
+      .filter(p => !p.erledigt && p.deadline && p.deadline < heute && KalenderDaten.istSichtbar(p));
+    const ueberfaelligHtml = ueberfaellig.length ? `
+      <section class="karte kal-tagesliste kal-warnung">
+        <h2 class="kal-tagkopf">Überfällige Projekte</h2>
+        <div class="kal-zeilen">${ueberfaellig.map(p => this.zeileHtml(this.alleVorkommenProjekt(p), p.deadline)).join('')}</div>
+      </section>` : '';
+
+    const morgen = KalenderDaten.plusTage(heute, 1);
+    const gruppen = [...tage.keys()].sort().map(tag => {
+      const d = Datum.ausSchluessel(tag);
+      const name = tag === heute ? 'Heute' : tag === morgen ? 'Morgen' : this.WOCHENTAGE[d.getDay()];
+      return `
+        <div class="kal-tag-gruppe">
+          <h2 class="kal-tagkopf"><span>${name}</span><small>${Datum.kurz(d)}</small></h2>
+          <div class="kal-zeilen">${tage.get(tag).map(v => this.zeileHtml(v, tag)).join('')}</div>
+        </div>`;
+    }).join('');
+
+    const ende = Datum.kurz(Datum.ausSchluessel(bis));
+    return `
+      ${ueberfaelligHtml}
+      ${gruppen ? `<section class="karte kal-anstehend">${gruppen}</section>`
+        : platzhalter('calendar-check', 'Nichts geplant', `Bis zum ${ende} stehen keine Termine an.`)}
+      <div class="kal-mehr-laden">
+        <small>Zeigt alles bis ${ende}</small>
+        <button type="button" class="knopf zweit klein" data-aktion="mehr-laden">${icon('chevrons-down')}<span>Weitere 60 Tage</span></button>
+      </div>`;
+  },
+
+  // Ein Projekt als Listen-Eintrag (für „Überfällig“)
+  alleVorkommenProjekt(p) {
+    return {
+      deadline: true, projekt: p, termin: { id: p.id, titel: p.titel, wiederholung: { art: 'keine' }, ort: '' },
+      datum: p.deadline, endDatum: p.deadline, ganztaegig: true, kalender: KalenderDaten.kalenderVon(p)
+    };
   },
 
   // Von außen aufrufen, wenn sich Daten geändert haben
@@ -183,6 +301,8 @@ const Kalender = {
 
   titelText() {
     const d = this.datum;
+    if (this.bereichWahl === 'anstehend') return 'Anstehend';
+    if (this.bereichWahl === 'projekte') return 'Projekte';
     if (this.ansicht === 'jahr') return String(d.getFullYear());
     if (this.ansicht === 'woche') {
       const tage = Datum.wocheVon(d);
@@ -208,7 +328,7 @@ const Kalender = {
     if (this.ansicht === 'monat') {
       const von = this.key(this.monatsAnfang(d));
       const bis = this.key(new Date(d.getFullYear(), d.getMonth() + 1, 0));
-      const n = KalenderDaten.vorkommen(von, bis).length;
+      const n = this.alleVorkommen(von, bis).length;
       return n === 0 ? 'Keine Termine' : n === 1 ? '1 Termin' : `${n} Termine`;
     }
     return '';
@@ -226,7 +346,7 @@ const Kalender = {
     const letzterImMonat = new Date(d.getFullYear(), d.getMonth() + 1, 0);
     const wochen = Math.ceil((Math.round((letzterImMonat - erster) / 86400000) + 1) / 7);
     const tage = Array.from({ length: wochen * 7 }, (_, i) => Datum.plusTage(erster, i));
-    const liste = KalenderDaten.vorkommen(this.key(tage[0]), this.key(tage[tage.length - 1]));
+    const liste = this.alleVorkommen(this.key(tage[0]), this.key(tage[tage.length - 1]));
     const gewaehlt = this.key(d);
 
     const kopf = Datum.wochenReihenfolge().map(t => `<span>${Datum.WOCHENTAGE_KURZ[t]}</span>`).join('');
@@ -240,8 +360,8 @@ const Kalender = {
       // Handy: farbige Punkte · Laptop: kurze Einträge
       const punkte = am.slice(0, 4).map(v => `<i style="${this.farbe(v.kalender)}"></i>`).join('');
       const eintraege = am.slice(0, 3).map(v => `
-        <span class="kal-kurz ${v.ganztaegig ? 'ganz' : ''}" style="${this.farbe(v.kalender)}" data-termin="${v.termin.id}">
-          ${v.ganztaegig ? '' : `<b>${v.datum === k ? v.start : ''}</b>`}${esc(v.termin.titel)}
+        <span class="kal-kurz ${v.ganztaegig ? 'ganz' : ''}" style="${this.farbe(v.kalender)}" ${this.zielAttr(v)}>
+          ${v.deadline ? icon('flag') : v.ganztaegig ? '' : `<b>${v.datum === k ? v.start : ''}</b>`}${esc(v.termin.titel)}
         </span>`).join('');
       const mehr = am.length > 3 ? `<span class="kal-mehr">+${am.length - 3} weitere</span>` : '';
       return `
@@ -264,7 +384,7 @@ const Kalender = {
   // Liste der Termine eines Tages (unter dem Monat)
   tageslisteHtml(tag) {
     const k = this.key(tag);
-    const liste = this.vorkommenAm(KalenderDaten.vorkommen(k, k), k);
+    const liste = this.vorkommenAm(this.alleVorkommen(k, k), k);
     const zeilen = liste.map(v => this.zeileHtml(v, k)).join('');
     return `
       <section class="karte kal-tagesliste">
@@ -276,6 +396,19 @@ const Kalender = {
 
   // Eine Termin-Zeile (Liste)
   zeileHtml(v, tag) {
+    if (v.deadline) {
+      // Projekt-Deadline
+      const p = v.projekt;
+      return `
+        <button type="button" class="kal-zeile" style="${this.farbe(v.kalender)}" data-projekt="${p.id}">
+          <span class="kal-strich"></span>
+          <span class="titel-text">
+            <strong>${esc(p.titel)}</strong>
+            <small>Deadline · ${esc(Projekte.frist(p).text)} · ${KalenderDaten.projektFortschritt(p)} %</small>
+          </span>
+          <span class="kal-zeile-icon">${icon('flag')}</span>
+        </button>`;
+    }
     const t = v.termin;
     const unter = [this.zeitText(v, tag)];
     if (t.wiederholung.art !== 'keine') unter.push(QuickAdd.wiederholungText(t.wiederholung));
@@ -298,7 +431,7 @@ const Kalender = {
      ========================================================= */
   jahrHtml() {
     const jahr = this.datum.getFullYear();
-    const liste = KalenderDaten.vorkommen(`${jahr}-01-01`, `${jahr}-12-31`);
+    const liste = this.alleVorkommen(`${jahr}-01-01`, `${jahr}-12-31`);
     // Welche Tage haben Termine? (mehrtägige: jeder Tag)
     const belegt = new Set();
     liste.forEach(v => {
@@ -341,7 +474,7 @@ const Kalender = {
   tagHtml() {
     // Oben ein Wochenstreifen wie am iPhone, darunter das Raster eines Tages
     const woche = Datum.wocheVon(this.datum);
-    const liste = KalenderDaten.vorkommen(this.key(woche[0]), this.key(woche[6]));
+    const liste = this.alleVorkommen(this.key(woche[0]), this.key(woche[6]));
     const streifen = woche.map(tag => {
       const k = this.key(tag);
       const klassen = ['kal-streifen-tag'];
@@ -386,7 +519,7 @@ const Kalender = {
   rasterHtml(tage, mitKopf) {
     const von = this.key(tage[0]);
     const bis = this.key(tage[tage.length - 1]);
-    const liste = KalenderDaten.vorkommen(von, bis);
+    const liste = this.alleVorkommen(von, bis);
     const H = this.STUNDE;
 
     // Kopfzeile mit Wochentagen (nur Woche)
@@ -406,8 +539,8 @@ const Kalender = {
       const am = this.vorkommenAm(liste, k).filter(v => v.ganztaegig);
       ganzAnzahl += am.length;
       return `<div class="kal-ganz-zelle">${am.map(v => `
-        <button type="button" class="kal-ganz-termin" style="${this.farbe(v.kalender)}" data-termin="${v.termin.id}" data-am="${v.datum}">
-          ${esc(v.termin.titel)}
+        <button type="button" class="kal-ganz-termin ${v.deadline ? 'deadline' : ''}" style="${this.farbe(v.kalender)}" ${this.zielAttr(v)}>
+          ${v.deadline ? icon('flag') : ''}${esc(v.termin.titel)}
         </button>`).join('')}</div>`;
     }).join('');
 
@@ -591,6 +724,7 @@ const Kalender = {
     this.vorschauZeichnen();
     if (art === 'projekt') {
       meldung(`Projekt „${eintrag.titel}“ angelegt`);
+      this.projektGezeigt(eintrag);
       return;
     }
     meldung(`Eingetragen: ${eintrag.titel}`);
@@ -599,6 +733,12 @@ const Kalender = {
 
   // Zeigt den Tag eines Termins (z. B. nach dem Anlegen) und hebt ihn hervor
   springeZu(termin, tag = termin.datum) {
+    // In „Anstehend“ bleiben (dort taucht der Termin in der Liste auf), aus „Projekte“ zum Kalender
+    if (this.bereichWahl === 'anstehend') {
+      this.neuId = termin.id;
+      return this.ansichtNeu();
+    }
+    this.bereichWahl = 'kalender';
     const vorher = this.key(this.datum);
     this.datum = Datum.ausSchluessel(tag);
     if (this.ansicht === 'jahr') this.ansicht = 'monat';
@@ -626,13 +766,30 @@ const Kalender = {
       return;
     }
 
+    // Kalender | Anstehend | Projekte
+    const knopfBereich = ziel.closest('[data-name="bereich"] .auswahl-knopf');
+    if (knopfBereich) {
+      this.bereichWahl = knopfBereich.dataset.wert;
+      this._letzteAnsicht = null;
+      this.ansichtNeu();
+      return;
+    }
+
     const aktion = ziel.closest('[data-aktion]');
     if (aktion) {
       switch (aktion.dataset.aktion) {
         case 'zurueck': return this.blaettern(-1);
         case 'vor': return this.blaettern(1);
         case 'heute': return this.zuHeute();
-        case 'neu': return TerminFormular.oeffnen({ werte: { datum: this.key(this.datum) } });
+        case 'neu':
+          if (this.bereichWahl === 'projekte') return ProjektFormular.oeffnen();
+          return TerminFormular.oeffnen({ werte: { datum: this.key(this.datum) } });
+        case 'projekt-neu': return ProjektFormular.oeffnen();
+        case 'suche': return KalenderSuche.oeffnen();
+        case 'kalender-verwalten': return KalenderVerwaltung.oeffnen();
+        case 'mehr-laden':
+          this.anstehendTage += 60;
+          return this.ansichtNeu();
         case 'qa-ok': return this.quickAddSpeichern();
         case 'qa-weg': {
           this.vorschauWeg();
@@ -652,9 +809,11 @@ const Kalender = {
       return;
     }
 
-    // Termin angeklickt → Detailansicht
-    const termin = ziel.closest('[data-termin]');
+    // Termin/Projekt angeklickt → Detailansicht
+    // (im Monat am Laptop zählt ein Klick auf einen kurzen Eintrag als Klick auf den Tag)
+    const termin = ziel.closest('[data-termin], [data-projekt]');
     if (termin && !termin.classList.contains('kal-kurz')) {
+      if (termin.dataset.projekt) return ProjektDetail.oeffnen(termin.dataset.projekt);
       return TerminDetail.oeffnen(termin.dataset.termin, termin.dataset.am);
     }
 

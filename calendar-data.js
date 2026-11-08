@@ -328,18 +328,78 @@ const KalenderDaten = {
     return p.fortschritt || 0;
   },
 
+  /* Teilschritte (Checkliste) eines Projekts */
+  schrittHinzufuegen(projektId, text) {
+    const p = this.projekt(projektId);
+    if (!p || !text.trim()) return;
+    p.schritte.push({ id: Daten.neueId(), text: text.trim(), erledigt: false });
+    this.projektSpeichern({ id: p.id, schritte: p.schritte });
+  },
+
+  schrittUmschalten(projektId, schrittId) {
+    const p = this.projekt(projektId);
+    const s = p && p.schritte.find(x => x.id === schrittId);
+    if (!s) return;
+    s.erledigt = !s.erledigt;
+    this.projektSpeichern({ id: p.id, schritte: p.schritte });
+  },
+
+  schrittLoeschen(projektId, schrittId) {
+    const p = this.projekt(projektId);
+    if (!p) return;
+    this.projektSpeichern({ id: p.id, schritte: p.schritte.filter(s => s.id !== schrittId) });
+  },
+
   // Noch wie viele Tage bis zur Deadline? (negativ = überfällig, null = keine Deadline)
   tageBisDeadline(p) {
     if (!p.deadline) return null;
     return this.tageZwischen(Datum.schluessel(Datum.heute()), p.deadline);
   },
 
-  // Projekte mit Deadline in einem Zeitraum (für die Kalenderansichten)
+  // Projekte mit Deadline in einem Zeitraum (für die Kalenderansichten; erledigte nicht)
   deadlines(von, bis, { auchAusgeblendete = false } = {}) {
     return this.bereich.projekte
-      .filter(p => p.deadline && p.deadline >= von && p.deadline <= bis)
+      .filter(p => !p.erledigt && p.deadline && p.deadline >= von && p.deadline <= bis)
       .filter(p => auchAusgeblendete || this.istSichtbar(p))
       .map(p => ({ projekt: p, datum: p.deadline, kalender: this.kalenderVon(p) }));
+  },
+
+
+  /* ---------- Suche ---------- */
+
+  // Nächster Tag (ab „ab“), an dem ein Termin stattfindet – bei Serien ausgerechnet.
+  // Gibt es keinen mehr (Serie vorbei), kommt der letzte vergangene bzw. der Starttag zurück.
+  naechstesVorkommen(t, ab) {
+    if (t.wiederholung.art === 'keine') return t.datum;
+    let tag = t.datum > ab ? t.datum : ab;
+    for (let i = 0; i < 800; i++) {
+      if (this.passtAufTag(t, tag)) return tag;
+      tag = this.plusTage(tag, 1);
+    }
+    return t.datum;
+  },
+
+  /* Sucht in Titel, Ort und Notizen aller Termine und Projekte (auch ausgeblendete Kalender).
+     Ergebnis: { termine: [{ termin, tag, kommend }], projekte: [projekt] }
+     Kommende Termine zuerst (nächster zuerst), danach vergangene (neuester zuerst). */
+  suchen(text) {
+    const woerter = String(text || '').toLowerCase().split(/\s+/).filter(Boolean);
+    if (!woerter.length) return { termine: [], projekte: [] };
+    const passt = (...felder) => {
+      const inhalt = felder.join(' ').toLowerCase();
+      return woerter.every(w => inhalt.includes(w));
+    };
+    const heute = Datum.schluessel(Datum.heute());
+    const termine = this.bereich.termine
+      .filter(t => passt(t.titel, t.ort, t.notiz, (this.kalenderVon(t) || {}).name))
+      .map(t => {
+        const tag = this.naechstesVorkommen(t, heute);
+        return { termin: t, tag, kommend: tag >= heute || (t.endDatum >= heute && t.wiederholung.art === 'keine') };
+      })
+      .sort((a, b) => (b.kommend - a.kommend) || (a.kommend ? a.tag.localeCompare(b.tag) : b.tag.localeCompare(a.tag)));
+    const projekte = this.bereich.projekte
+      .filter(p => passt(p.titel, p.notiz, p.schritte.map(s => s.text).join(' '), (this.kalenderVon(p) || {}).name));
+    return { termine, projekte };
   },
 
 

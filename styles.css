@@ -2848,6 +2848,411 @@ button.heute-haupt {
   gap: var(--abstand-s);
 }
 
+/* -- Kopf: Suche, Kalender, + -- */
+.kal-kopf-knoepfe {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.kal-kopf h1 {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Tag | Woche | Monat | Jahr: etwas kleiner als die Bereichswahl darüber */
+.kal-ansichten .auswahl-gruppe {
+  padding: 3px;
+  border-radius: var(--rundung-klein);
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--linie);
+}
+
+.kal-ansichten .auswahl-knopf {
+  min-height: 34px;
+  padding: 4px;
+  border-radius: 8px;
+  font-size: var(--schrift-klein);
+}
+
+.kal-ansichten,
+.kal-leiste {
+  margin-top: calc(var(--abstand-s) * -1);
+}
+
+.kal-leiste {
+  margin-bottom: calc(var(--abstand-s) * -1);
+}
+
+[data-nur-kalender][hidden] {
+  display: none;
+}
+
+/* Kleine Icons in Einträgen (Fähnchen für Deadlines) */
+.kal-kurz svg,
+.kal-ganz-termin svg {
+  width: 11px;
+  height: 11px;
+  margin-right: 3px;
+  vertical-align: -1px;
+}
+
+.kal-ganz-termin.deadline {
+  box-shadow: inset 0 0 0 1px var(--kat);
+}
+
+/* -- Abschnitts-Überschrift (Erledigt, Kommende Termine …) -- */
+.kal-abschnitt {
+  margin: var(--abstand-s) var(--abstand-xs) 0;
+  color: var(--text-2);
+  font-size: var(--schrift-klein);
+  font-weight: 600;
+}
+
+/* -- Projekte -- */
+.kal-projekte {
+  display: grid;
+  gap: var(--abstand-s);
+}
+
+.kal-projekt {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--abstand-m);
+  width: 100%;
+  padding: var(--abstand-l);
+  border: 1px solid var(--linie);
+  border-radius: var(--rundung-gross);
+  background: var(--flaeche);
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color var(--dauer-kurz) ease;
+}
+
+.kal-projekt:hover {
+  border-color: var(--text-3);
+}
+
+.kal-projekt.erledigt {
+  opacity: 0.6;
+}
+
+.kal-projekt.erledigt strong {
+  text-decoration: line-through;
+}
+
+.kal-projekt-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.kal-projekt-text strong {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.kal-projekt-text small {
+  color: var(--text-2);
+  font-size: var(--schrift-klein);
+}
+
+.kal-frist.bald {
+  color: var(--farbe-ocker);
+  font-weight: 600;
+}
+
+.kal-frist.ueberfaellig {
+  color: var(--gefahr);
+  font-weight: 600;
+}
+
+/* Fortschrittsbalken */
+.kal-balken {
+  display: block;
+  height: 6px;
+  margin-top: 4px;
+  overflow: hidden;
+  border-radius: var(--rundung-voll);
+  background: var(--flaeche-2);
+}
+
+.kal-balken i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--kat, var(--akzent));
+  transition: width var(--dauer) var(--kurve);
+}
+
+@media (min-width: 700px) {
+  .kal-projekte {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Projekt-Detail */
+.kal-projekt-stand {
+  display: flex;
+  align-items: center;
+  gap: var(--abstand-m);
+}
+
+.kal-projekt-stand strong {
+  min-width: 52px;
+  font-size: 1.25rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.kal-projekt-stand .kal-balken {
+  flex: 1;
+  height: 8px;
+  margin: 0;
+}
+
+.kal-regler {
+  width: 100%;
+  accent-color: var(--kat, var(--akzent));
+}
+
+.kal-schritte {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: var(--abstand-xs);
+}
+
+.kal-schritt {
+  display: flex;
+  align-items: center;
+  gap: var(--abstand-xs);
+  border-bottom: 1px solid var(--linie);
+}
+
+.kal-schritt label {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: var(--abstand-m);
+  min-width: 0;
+  padding: var(--abstand-s) 0;
+  cursor: pointer;
+}
+
+.kal-schritt label span {
+  overflow-wrap: anywhere;
+}
+
+.kal-schritt.fertig label span {
+  color: var(--text-3);
+  text-decoration: line-through;
+}
+
+/* Runder Haken zum Abhaken */
+.kal-schritt input {
+  position: relative;
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  margin: 0;
+  border: 1.5px solid var(--text-3);
+  border-radius: var(--rundung-voll);
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+  transition: background-color var(--dauer-kurz) ease, border-color var(--dauer-kurz) ease;
+}
+
+.kal-schritt input:checked {
+  border-color: var(--kat, var(--akzent));
+  background: var(--kat, var(--akzent));
+}
+
+.kal-schritt input:checked::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 7px;
+  width: 5px;
+  height: 10px;
+  border: solid #fff;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.kal-schritt input:focus-visible {
+  outline: 2px solid var(--text);
+  outline-offset: 2px;
+}
+
+.kal-schritt .icon-knopf {
+  width: 32px;
+  height: 32px;
+  color: var(--text-3);
+}
+
+.kal-schritt-neu {
+  display: flex;
+  gap: var(--abstand-xs);
+}
+
+.kal-schritt-neu .icon-knopf {
+  flex-shrink: 0;
+  width: 46px;
+  height: 46px;
+  color: var(--akzent-text);
+  background: color-mix(in srgb, var(--akzent) var(--toenung), transparent);
+}
+
+/* -- Anstehend -- */
+.kal-anstehend {
+  display: flex;
+  flex-direction: column;
+  gap: var(--abstand-l);
+  padding-bottom: var(--abstand-m);
+}
+
+.kal-tagkopf {
+  display: flex;
+  align-items: baseline;
+  gap: var(--abstand-s);
+  font-size: var(--schrift-normal);
+  font-weight: 600;
+}
+
+.kal-tagkopf small {
+  color: var(--text-3);
+  font-size: var(--schrift-klein);
+  font-weight: 500;
+}
+
+.kal-tag-gruppe + .kal-tag-gruppe {
+  padding-top: var(--abstand-m);
+  border-top: 1px solid var(--linie);
+}
+
+.kal-tag-gruppe .kal-zeilen {
+  margin-top: var(--abstand-xs);
+}
+
+.kal-warnung {
+  border-color: color-mix(in srgb, var(--gefahr) 40%, var(--linie));
+}
+
+.kal-warnung .kal-tagkopf {
+  color: var(--gefahr);
+}
+
+.kal-mehr-laden {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--abstand-s);
+  color: var(--text-3);
+  font-size: var(--schrift-klein);
+}
+
+/* -- Suche -- */
+.kal-suche {
+  display: flex;
+  flex-direction: column;
+  gap: var(--abstand-s);
+}
+
+.kal-suche .kal-schnell .eingabe {
+  background: var(--hintergrund);
+}
+
+.kal-suche-hinweis {
+  padding: var(--abstand-l) var(--abstand-xs);
+  text-align: center;
+}
+
+.kal-suche .kal-zeilen {
+  margin-top: 0;
+}
+
+.kal-zeile.vergangen {
+  opacity: 0.6;
+}
+
+/* -- Kalender verwalten -- */
+.kal-verwaltung {
+  display: flex;
+  flex-direction: column;
+  gap: var(--abstand-l);
+}
+
+.kal-verw-liste {
+  display: flex;
+  flex-direction: column;
+}
+
+.kal-verw-zeile {
+  display: flex;
+  align-items: center;
+  gap: var(--abstand-m);
+  padding: var(--abstand-xs) 0;
+  border-bottom: 1px solid var(--linie);
+}
+
+.kal-verw-zeile.aus .kal-verw-name {
+  opacity: 0.5;
+}
+
+.kal-verw-name {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: var(--abstand-m);
+  min-width: 0;
+  padding: var(--abstand-s) 0;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  transition: opacity var(--dauer-kurz) ease;
+}
+
+/* Sehr schmale Handys: Bereichswahl ohne Icons */
+@media (max-width: 370px) {
+  [data-name="bereich"] .auswahl-knopf svg {
+    display: none;
+  }
+}
+
+/* Schmale Handys: Titel etwas kleiner, damit „November 2026“ neben die drei Knöpfe passt */
+@media (max-width: 400px) {
+  .kal-kopf h1 {
+    font-size: 1.375rem;
+  }
+
+  .kal-kopf-knoepfe .icon-knopf:not(.kal-plus) {
+    width: 34px;
+  }
+}
+
+@media (max-width: 350px) {
+  .kal-kopf h1 {
+    font-size: 1.25rem;
+  }
+
+  .kal-kopf-knoepfe .icon-knopf:not(.kal-plus) {
+    width: 30px;
+  }
+
+  .kal-plus {
+    width: 38px;
+    height: 38px;
+  }
+}
+
 /* Breitere Bildschirme: im Monat kurze Einträge statt Punkte, Jahr mit mehr Spalten */
 @media (min-width: 700px) {
   .kal-tag {
