@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<!--
+  Testseite für den Quick-Add-Parser des Kalenders.
+  Öffnen: Doppelklick auf diese Datei.
+  Grün = Satz wird richtig erkannt, Rot = Abweichung.
+  Unten kannst du eigene Sätze ausprobieren.
+-->
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Parser-Tests – Habit Tracker</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="../styles.css">
+  <style>
+    /* Nur für diese Testseite – nutzt die Design-Variablen der App */
+    body { padding: var(--abstand-l, 24px) 16px 48px; }
+    .test-rahmen { max-width: 860px; margin: 0 auto; display: grid; gap: 16px; }
+    .test-kopf h1 { margin: 0 0 4px; font-size: 1.5rem; }
+    .test-kopf p { margin: 0; color: var(--text-2); }
+    .test-zusammenfassung { font-weight: 600; font-size: 1.125rem; }
+    .test-zusammenfassung.ok { color: var(--farbe-salbei); }
+    .test-zusammenfassung.fehler { color: var(--farbe-koralle); }
+    .test-liste { display: grid; gap: 8px; }
+    .test-fall { display: grid; grid-template-columns: 24px 1fr; gap: 4px 10px; padding: 12px 14px;
+      border: 1px solid var(--linie); border-radius: 14px; background: var(--flaeche); }
+    .test-fall .zeichen { font-weight: 700; }
+    .test-fall.ok .zeichen { color: var(--farbe-salbei); }
+    .test-fall.fehler { border-color: var(--farbe-koralle); }
+    .test-fall.fehler .zeichen { color: var(--farbe-koralle); }
+    .test-satz { font-weight: 600; }
+    .test-ergebnis, .test-abweichung { grid-column: 2; font-size: 0.875rem; color: var(--text-2); }
+    .test-abweichung { color: var(--farbe-koralle); }
+    .test-probe input { width: 100%; }
+    .test-probe pre { white-space: pre-wrap; font-size: 0.8125rem; background: var(--flaeche-2);
+      border-radius: 14px; padding: 12px; margin: 10px 0 0; overflow-x: auto; }
+    .test-vorschau { font-weight: 600; margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <main class="test-rahmen">
+    <div class="test-kopf">
+      <h1>Quick-Add-Parser · Tests</h1>
+      <p>Alle Sätze werden so ausgewertet, als wäre jetzt <strong>Sonntag, 08.11.2026, 10:00 Uhr</strong>.</p>
+    </div>
+
+    <section class="karte test-probe">
+      <h2 style="margin-top:0">Selbst ausprobieren</h2>
+      <p style="color:var(--text-2);margin-top:0">Hier rechnet der Parser mit dem echten Datum von heute.</p>
+      <input id="probe" class="eingabe" type="text" placeholder="z. B. Zahnarzt morgen 14:30 1h" autocomplete="off">
+      <div class="test-vorschau" id="probe-vorschau"></div>
+      <pre id="probe-ergebnis"></pre>
+    </section>
+
+    <div class="test-zusammenfassung" id="zusammenfassung"></div>
+    <div class="test-liste" id="liste"></div>
+  </main>
+
+  <script src="../calendar-parser.js"></script>
+  <script src="parser-tests.js"></script>
+  <script>
+    // Hell/Dunkel wie im System
+    if (matchMedia('(prefers-color-scheme: dark)').matches) document.documentElement.dataset.theme = 'dark';
+
+    const esc = t => String(t).replace(/[&<>"]/g, z => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[z]));
+
+    // Alle Tests ausführen und anzeigen
+    let bestanden = 0;
+    const html = TESTFAELLE.map(fall => {
+      let ergebnis, fehler;
+      try {
+        ({ ergebnis, fehler } = testPruefen(fall));
+      } catch (f) {
+        fehler = ['Absturz: ' + f.message];
+      }
+      if (!fehler.length) bestanden++;
+      return `<div class="test-fall ${fehler.length ? 'fehler' : 'ok'}">
+        <span class="zeichen">${fehler.length ? '✗' : '✓'}</span>
+        <span class="test-satz">${esc(fall.satz)}</span>
+        ${ergebnis ? `<span class="test-ergebnis">→ ${esc(QuickAdd.beschreibung(ergebnis, TEST_JETZT))}${ergebnis.kategorie ? ' · #' + esc(ergebnis.kategorie) : ''}</span>` : ''}
+        ${fehler.map(f => `<span class="test-abweichung">${esc(f)}</span>`).join('')}
+      </div>`;
+    }).join('');
+    document.getElementById('liste').innerHTML = html;
+    const z = document.getElementById('zusammenfassung');
+    z.textContent = `${bestanden} von ${TESTFAELLE.length} Tests bestanden`;
+    z.className = 'test-zusammenfassung ' + (bestanden === TESTFAELLE.length ? 'ok' : 'fehler');
+
+    // Eingabefeld zum Ausprobieren
+    const probe = document.getElementById('probe');
+    probe.addEventListener('input', () => {
+      if (!probe.value.trim()) {
+        document.getElementById('probe-vorschau').textContent = '';
+        document.getElementById('probe-ergebnis').textContent = '';
+        return;
+      }
+      const e = QuickAdd.parse(probe.value);
+      document.getElementById('probe-vorschau').textContent = QuickAdd.beschreibung(e) + (e.kategorie ? ' · #' + e.kategorie : '');
+      document.getElementById('probe-ergebnis').textContent = JSON.stringify(e, null, 2);
+    });
+  </script>
+</body>
+</html>

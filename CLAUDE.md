@@ -35,6 +35,8 @@ Testen: Der eingebaute Browser zeigt `file://`-Seiten nur als Schnappschuss ohne
 | `stats.js` | `Statistik` + `Seiten.statistik`: Kacheln, Gesamt-Heatmap, Kategorien (Woche/Monat mit Blättern), Chart.js-Verlauf, Gewohnheitenliste mit Serien, Detail-Dialog pro Gewohnheit. Rechenregeln siehe unten |
 | `wisdom.js` | Nur Inhalte: `EPOCHEN` (Name + Farb-id), `PHILOSOPHEN` (Name, Lebenszeit, Epoche, `deutsch: true` = Originalsprache Deutsch, sonst Karte zeigt „übersetzt“), `WEISHEITEN` (151 Einträge: `id, von, typ, text, sinngemaess, quelle, erklaerung, denkanstoss`). Vom Nutzer selbst erweiterbar (Anleitung in README) |
 | `wisdom-page.js` | `Weisheit` + `Seiten.weisheit`: Tagesauswahl, Ansichten Heute/Archiv/Favoriten, Filter, Detail-Dialog, Notizen (verzögert gespeichert, `notizenJetztSpeichern()` beim Verlassen), Kopieren/Teilen, `vorschauHtml()` für „Heute“ |
+| `calendar-parser.js` | `QuickAdd` (eigenständig, ohne App-Abhängigkeiten): `parse(satz, bezug)` erkennt Titel, Datum, Zeit, Dauer, ganztägig, Wiederholung, #Kategorie, @Ort, „Projekt …“; `beschreibung()` für die Vorschau. Kein chrono-node (nur als ES-Modul, schwaches Deutsch). Tests: `tests/parser-tests.html` (Doppelklick, fester Bezug So 08.11.2026 10:00) – bei neuen Regeln Testfall in `tests/parser-tests.js` ergänzen |
+| `calendar-data.js` | `KalenderDaten`: Kalender (Apple-artig, Farbe, ausblendbar; Start-Kalender mit festen ids aus `KONFIG.startKalender`), Termine (`terminVorlage`, Serien als Regel + `vorkommen(von, bis)` rechnet Tage aus, Ausnahmen), Projekte (Deadline, Teilschritte, `projektFortschritt`), `ausQuickAdd()`, `auffuellen()` nach Import |
 | `habits.js` | `Seiten.gewohnheiten`: Liste, Formulare für Kategorie/Gewohnheit, Drag & Drop (SortableJS mit `forceFallback`), Texte wie `gewohnheitBeschreibung()`/`haeufigkeitText()` |
 | `settings.js` | `Seiten.einstellungen`: Darstellung, Wochenstart, „Als App installieren“ (je nach `PWA`-Zustand), Daten & Backup (Export als JSON-Download, Import über `<input type=file>` + `Daten.importieren`, Zurücksetzen) |
 | `manifest.webmanifest`, `sw.js`, `icons/` | PWA. Icons sind PNGs (192/512/maskable/apple-touch 180) + `icon.svg` als Favicon; Motiv: weißer Haken auf `#7e9c85` |
@@ -44,6 +46,7 @@ Datenmodell (`Daten.zustand`):
 - `gewohnheiten: [{ id, kategorieId, name, icon, typ: 'janein'|'zaehler'|'zahl', ziel (Zahl oder null; bei negativ = Höchstwert), einheit, richtung: 'positiv'|'negativ', haeufigkeit: { art: 'taeglich'|'wochentage'|'proWoche', tage: [0–6, 0 = So], anzahl }, ausgeblendet, erstellt }]` – Farbe kommt immer von der Kategorie
 - `eintraege: { 'JJJJ-MM-TT': { [gewohnheitId]: { wert?, notiz? } } }` – `wert` ist immer eine Zahl (Abhaken: 1 = erledigt/vermieden; Zähler/Zahl: der Wert); kein Wert = nichts eingetragen. Leere Einträge/Tage werden entfernt; beim Löschen einer Gewohnheit verschwinden ihre Einträge mit
 - Fälligkeit hängt nicht vom Erstelldatum ab (damit man auch vor dem Anlegen nachtragen kann).
+- `kalender: { kalender: [...], standardKalender, termine: [...], projekte: [...] }` – Felder siehe Kopf von `calendar-data.js`. Datum als `'JJJJ-MM-TT'`, Zeiten als `'HH:MM'` (lokale Zeit, keine Zeitzonen). Teil von Export/Import.
 - `weisheit: { verlauf: { 'JJJJ-MM-TT': weisheitId }, favoriten: [ids], notizen: { 'JJJJ-MM-TT': text } }` – Teil von Export/Import. Einstellung `weisheitAufHeute` schaltet die Vorschau auf „Heute“.
 
 Weisheit-Regeln (`wisdom-page.js`):
@@ -77,6 +80,7 @@ Matt und ruhig: keine Verläufe, kein Glanz, keine Neonfarben; gedämpfte Palett
 4. ✅ Statistik: Streaks, Heatmap, Wochen/Monat pro Kategorie, Chart.js-Diagramme, Erfolgsquote
 5. ✅ Export/Import (JSON), Zurücksetzen, PWA (manifest + sw.js), Feinschliff (bis 320px Breite getestet), README.md
 6. ✅ Reiter „Weisheit des Tages“ (Version 1.1)
+7. Reiter „Kalender“ (Apple-Kalender-artig, in 4 Phasen): ✅ K1 Datenstruktur + Quick-Add-Parser + Tests · K2 Monat/Woche/Tag/Jahr + Detail · K3 Projekte, Kalender verwalten, Suche, „Anstehend“ · K4 Drag & Drop, Erinnerungen (Benachrichtigung nur bei offener App + .ics-Export), Feinschliff. Navigation dann 6 Punkte: am schmalen Handy nur Symbole, Beschriftung nur beim aktiven Punkt (vom Nutzer gewählt)
 
 ## Veröffentlichung (GitHub Pages)
 - Repo: https://github.com/TEchnox3108/habit-tracker (öffentlich, Branch `main`), live unter https://technox3108.github.io/habit-tracker/

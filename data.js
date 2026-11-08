@@ -7,6 +7,7 @@
      - gewohnheiten:  Liste aller Gewohnheiten (Reihenfolge = Anzeige)
      - eintraege:     was du an welchem Tag erledigt hast
      - weisheit:      Verlauf, Favoriten und Notizen der "Weisheit des Tages"
+     - kalender:      Kalender, Termine und Projekte (siehe calendar-data.js)
    Der Browser merkt es sich im "localStorage" – das ist ein
    kleiner Speicher im Browser, der auch nach dem Schließen bleibt.
 
@@ -30,7 +31,20 @@ const Daten = {
       ...this.startdaten(),
       eintraege: {},
       // Weisheit des Tages: welche an welchem Tag dran war, Favoriten, eigene Notizen
-      weisheit: { verlauf: {}, favoriten: [], notizen: {} }
+      weisheit: { verlauf: {}, favoriten: [], notizen: {} },
+      // Kalender: Kalender (Schule, Arbeit …), Termine und Projekte
+      // (alles Weitere dazu in calendar-data.js)
+      kalender: this.kalenderStandard()
+    };
+  },
+
+  // Leerer Kalender-Bereich mit den Start-Kalendern aus config.js
+  kalenderStandard() {
+    return {
+      kalender: KONFIG.startKalender.map(k => ({ ...k, ausgeblendet: false })),
+      standardKalender: 'kal-privat', // in diesen Kalender kommen neue Termine ohne #Tag
+      termine: [],
+      projekte: []
     };
   },
 
@@ -60,7 +74,8 @@ const Daten = {
         ...standard,
         ...gespeichert,
         einstellungen: { ...standard.einstellungen, ...gespeichert.einstellungen },
-        weisheit: { ...standard.weisheit, ...gespeichert.weisheit }
+        weisheit: { ...standard.weisheit, ...gespeichert.weisheit },
+        kalender: { ...standard.kalender, ...gespeichert.kalender }
       };
       // Beim allerersten Start die Startdaten gleich festhalten
       if (!gespeichert.kategorien) this.speichern();
@@ -106,8 +121,11 @@ const Daten = {
       kategorien: d.kategorien.map(k => ({ farbe: 'salbei', icon: 'star', ausgeblendet: false, ...k })),
       gewohnheiten: d.gewohnheiten.map(g => this.gewohnheitVorlage(g)),
       eintraege: d.eintraege || {},
-      weisheit: { ...standard.weisheit, ...(d.weisheit || {}) }
+      weisheit: { ...standard.weisheit, ...(d.weisheit || {}) },
+      kalender: { ...standard.kalender, ...(d.kalender || {}) }
     };
+    // Termine/Projekte aus der Datei mit allen Standardfeldern auffüllen
+    if (typeof KalenderDaten !== 'undefined') KalenderDaten.auffuellen();
     this.speichern();
   },
 

@@ -66,6 +66,19 @@ const KONFIG = {
   ],
 
   /* -------------------------------------------------------
+     Start-Kalender für den Reiter "Kalender" (wie bei Apple:
+     jeder Kalender hat eine eigene Farbe und lässt sich
+     ein- und ausblenden). Die "id" bitte nie ändern.
+     ------------------------------------------------------- */
+  startKalender: [
+    { id: 'kal-privat', name: 'Privat', farbe: 'pflaume', icon: 'house' },
+    { id: 'kal-schule', name: 'Schule', farbe: 'staubblau', icon: 'graduation-cap' },
+    { id: 'kal-arbeit', name: 'Arbeit', farbe: 'schiefer', icon: 'briefcase' },
+    { id: 'kal-fitness', name: 'Fitness', farbe: 'salbei', icon: 'dumbbell' },
+    { id: 'kal-familie', name: 'Familie', farbe: 'ocker', icon: 'users' }
+  ],
+
+  /* -------------------------------------------------------
      Start-Kategorien mit Beispiel-Gewohnheiten.
      Diese werden nur beim allerersten Start angelegt.
      Danach änderst du alles direkt in der App.
