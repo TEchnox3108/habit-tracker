@@ -319,7 +319,9 @@ const Kalender = {
   leisteText() {
     const d = this.datum;
     if (this.ansicht === 'tag') {
-      return `${this.WOCHENTAGE[d.getDay()]}, ${Datum.kurz(d)}${this.istHeute(d) ? ' · Heute' : ''}`;
+      // Am schmalen Handy „So“ statt „Sonntag“, damit alles in die Zeile passt
+      const name = matchMedia('(max-width: 420px)').matches ? Datum.WOCHENTAGE_KURZ[d.getDay()] : this.WOCHENTAGE[d.getDay()];
+      return `${name}, ${Datum.kurz(d)}${this.istHeute(d) ? ' · Heute' : ''}`;
     }
     if (this.ansicht === 'woche') {
       const tage = Datum.wocheVon(d);
@@ -557,13 +559,17 @@ const Kalender = {
         const hoehe = Math.max((s.bis - s.von) / 60 * H, 20);
         const breite = 100 / s.spalten;
         const kurz = hoehe < 36;
+        // Ziehbar sind Termine, die an diesem Tag beginnen und enden (nicht über Mitternacht)
+        const ziehbar = s.v.datum === k && s.v.endDatum === k;
         return `
           <button type="button" class="kal-termin ${kurz ? 'kurz' : ''}" style="${this.farbe(s.v.kalender)};
                   top:${s.von / 60 * H}px; height:${hoehe - 2}px;
                   left:calc(${s.spalte * breite}% + 1px); width:calc(${breite}% - 3px)"
-                  data-termin="${s.v.termin.id}" data-am="${s.v.datum}">
+                  data-termin="${s.v.termin.id}" data-am="${s.v.datum}"
+                  ${ziehbar ? `data-ziehbar data-von="${s.von}" data-bis="${s.bis}"` : ''}>
             <strong>${esc(s.v.termin.titel)}</strong>
             <small>${esc(this.zeitText(s.v, k))}</small>
+            ${ziehbar ? '<span class="kal-ziehgriff" aria-hidden="true"></span>' : ''}
           </button>`;
       }).join('');
       return `<div class="kal-spalte ${this.istHeute(tag) ? 'heute' : ''}" data-spalte="${k}">${termine}</div>`;
@@ -587,10 +593,13 @@ const Kalender = {
       </div>`;
   },
 
-  // Nach dem Zeichnen: an die richtige Stelle scrollen + „Jetzt“-Linie
+  // Nach dem Zeichnen: an die richtige Stelle scrollen + „Jetzt“-Linie + Ziehen
   rasterEinrichten() {
     const scroll = this.bereich.querySelector('[data-scroll]');
     if (!scroll) return;
+    scroll.onpointerdown = e => this.ziehenStart(e);
+    // Langes Drücken am Handy soll kein Kontextmenü öffnen
+    scroll.oncontextmenu = e => { if (e.target.closest('.kal-termin')) e.preventDefault(); };
     const jetztZeichnen = () => {
       if (!scroll.isConnected) { clearInterval(this.uhr); return; }
       scroll.querySelectorAll('.kal-jetzt, .kal-jetzt-zeit').forEach(el => el.remove());
@@ -614,6 +623,153 @@ const Kalender = {
       const ziel = scroll.querySelector('.kal-jetzt') ? (n.getHours() - 1.5) : 7;
       scroll.scrollTop = Math.max(0, ziel * this.STUNDE);
     }
+  },
+
+
+  /* =========================================================
+     Drag & Drop im Stundenraster
+     - Termin ziehen = verschieben (in der Woche auch auf einen anderen Tag)
+     - unteren Rand ziehen = Länge ändern
+     - Maus: losziehen nach ein paar Pixeln · Handy: erst kurz gedrückt halten
+       (sonst könnte man das Raster nicht mehr normal scrollen)
+     - Raster: 15 Minuten
+     ========================================================= */
+  ziehenStart(e) {
+    const el = e.target.closest('.kal-termin[data-ziehbar]');
+    if (!el || e.button > 0) return;
+    const t = KalenderDaten.termin(el.dataset.termin);
+    if (!t) return;
+    const H = this.STUNDE;
+    const scroll = this.bereich.querySelector('[data-scroll]');
+    const z = {
+      el, t,
+      am: el.dataset.am,
+      art: e.target.closest('.kal-ziehgriff') ? 'laenge' : 'verschieben',
+      x: e.clientX, y: e.clientY,
+      von: Number(el.dataset.von), bis: Number(el.dataset.bis),
+      aktiv: false,
+      touch: e.pointerType === 'touch'
+    };
+    z.neuVon = z.von; z.neuBis = z.bis; z.zielTag = z.am;
+    // Minute unter dem Finger/Mauszeiger (bezogen auf die Spalte)
+    const minuteBei = y => (y - el.parentElement.getBoundingClientRect().top) / H * 60;
+    z.griffVersatz = minuteBei(e.clientY) - z.von; // wo im Termin wurde angefasst?
+    const raster = m => Math.round(m / 15) * 15;
+
+    const aktivieren = () => {
+      z.aktiv = true;
+      el.classList.add('kal-zieht');
+      document.body.classList.add('kal-ziehen-aktiv');
+      if (z.touch && navigator.vibrate) navigator.vibrate(10);
+    };
+    if (z.touch) z.timer = setTimeout(aktivieren, 350);
+
+    const bewegen = ev => {
+      if (!z.aktiv) {
+        const weg = Math.hypot(ev.clientX - z.x, ev.clientY - z.y);
+        if (z.touch && weg > 8) return aufraeumen(); // Finger bewegt sich früh → normales Scrollen
+        if (!z.touch && weg > 4) aktivieren();
+        if (!z.aktiv) return;
+      }
+      ev.preventDefault();
+
+      // Am Rand des Rasters automatisch weiterscrollen
+      const r = scroll.getBoundingClientRect();
+      if (ev.clientY < r.top + 32) scroll.scrollTop -= 12;
+      else if (ev.clientY > r.bottom - 32) scroll.scrollTop += 12;
+
+      const kurz = el.querySelector('small');
+      if (z.art === 'verschieben') {
+        // Woche: Spalte unter dem Zeiger suchen und den Termin dorthin hängen
+        const spalte = [...scroll.querySelectorAll('.kal-spalte')].find(s => {
+          const sr = s.getBoundingClientRect();
+          return ev.clientX >= sr.left && ev.clientX < sr.right;
+        });
+        if (spalte && spalte !== el.parentElement) spalte.appendChild(el);
+        z.zielTag = el.parentElement.dataset.spalte;
+        const dauer = z.bis - z.von;
+        z.neuVon = Math.min(Math.max(0, raster(minuteBei(ev.clientY) - z.griffVersatz)), 1440 - dauer);
+        z.neuBis = z.neuVon + dauer;
+        el.style.top = `${z.neuVon / 60 * H}px`;
+        el.style.left = '1px';
+        el.style.width = 'calc(100% - 3px)';
+      } else {
+        z.neuBis = Math.min(Math.max(z.von + 15, raster(minuteBei(ev.clientY))), 1440);
+        el.style.height = `${Math.max((z.neuBis - z.von) / 60 * H, 20) - 2}px`;
+      }
+      kurz.textContent = `${KalenderDaten.zeitText(z.neuVon)} – ${z.neuBis >= 1440 ? '24:00' : KalenderDaten.zeitText(z.neuBis)}`;
+    };
+
+    // Solange gezogen wird, darf der Finger die Seite nicht scrollen
+    const scrollSperre = ev => { if (z.aktiv) ev.preventDefault(); };
+
+    const aufraeumen = () => {
+      clearTimeout(z.timer);
+      document.removeEventListener('pointermove', bewegen);
+      document.removeEventListener('pointerup', loslassen);
+      document.removeEventListener('pointercancel', abbrechen);
+      document.removeEventListener('touchmove', scrollSperre);
+      document.body.classList.remove('kal-ziehen-aktiv');
+    };
+    const loslassen = () => {
+      aufraeumen();
+      if (!z.aktiv) return; // war nur ein Tipp → Detailansicht öffnet sich wie gewohnt
+      this._gezogen = true; // den Klick nach dem Loslassen nicht als „Termin öffnen“ werten
+      setTimeout(() => { this._gezogen = false; }, 300);
+      this.ziehenSpeichern(z);
+    };
+    const abbrechen = () => {
+      aufraeumen();
+      if (z.aktiv) this.ansichtNeu(); // alles zurück an seinen Platz
+    };
+
+    document.addEventListener('pointermove', bewegen, { passive: false });
+    document.addEventListener('pointerup', loslassen);
+    document.addEventListener('pointercancel', abbrechen);
+    document.addEventListener('touchmove', scrollSperre, { passive: false });
+  },
+
+  async ziehenSpeichern(z) {
+    const t = z.t;
+    const zeit = m => (m >= 1440 ? '23:59' : KalenderDaten.zeitText(m));
+    if (z.zielTag === z.am && z.neuVon === z.von && z.neuBis === z.bis) return this.ansichtNeu();
+
+    // Neue Werte für dieses eine Vorkommen
+    const werte = z.art === 'verschieben'
+      ? { datum: z.zielTag, endDatum: z.zielTag, start: zeit(z.neuVon), ende: zeit(z.neuBis) }
+      : { ende: zeit(z.neuBis) };
+
+    let gespeichert;
+    if (t.wiederholung.art === 'keine') {
+      gespeichert = KalenderDaten.terminSpeichern({ id: t.id, ...werte });
+    } else {
+      const wahl = await auswahlFrage(`„${t.titel}“ wiederholt sich. Was soll geändert werden?`, [
+        { wert: 'einer', text: 'Nur dieser Termin' },
+        { wert: 'alle', text: 'Alle Termine der Serie' }
+      ]);
+      if (!wahl) return this.ansichtNeu(); // abgebrochen → zurück
+      if (wahl === 'einer') {
+        KalenderDaten.vorkommenLoeschen(t.id, z.am);
+        const kopie = JSON.parse(JSON.stringify(t));
+        delete kopie.id;
+        gespeichert = KalenderDaten.terminSpeichern({
+          ...kopie, datum: z.am, endDatum: z.am, ...werte,
+          wiederholung: { art: 'keine', tage: [], intervall: 1, bis: null, ausnahmen: [] }
+        });
+      } else if (z.art === 'verschieben') {
+        const neu = { ...t, ...werte, wiederholung: { ...t.wiederholung } };
+        gespeichert = KalenderDaten.terminSpeichern({ ...TerminFormular.serieVerschieben(t, z.am, neu), id: t.id });
+      } else {
+        gespeichert = KalenderDaten.terminSpeichern({ id: t.id, ...werte });
+      }
+    }
+
+    const tag = Datum.ausSchluessel(z.art === 'verschieben' ? z.zielTag : z.am);
+    meldung(z.art === 'verschieben'
+      ? `Verschoben: ${Datum.WOCHENTAGE_KURZ[tag.getDay()]}, ${Datum.kurz(tag).slice(0, 6)}, ${werte.start} – ${werte.ende}`
+      : `Neue Länge: bis ${werte.ende}`);
+    this.neuId = gespeichert.id;
+    this.ansichtNeu();
   },
 
 
@@ -648,7 +804,7 @@ const Kalender = {
       start = { x: e.touches[0].clientX, y: e.touches[0].clientY, zeit: Date.now() };
     };
     el.ontouchend = e => {
-      if (!start) return;
+      if (!start || this._gezogen) { start = null; return; } // war ein Drag & Drop, kein Wischen
       const dx = e.changedTouches[0].clientX - start.x;
       const dy = e.changedTouches[0].clientY - start.y;
       const schnell = Date.now() - start.zeit < 600;
@@ -694,6 +850,7 @@ const Kalender = {
     const kalName = vorhanden ? vorhanden.name : e.kategorie.charAt(0).toUpperCase() + e.kategorie.slice(1);
     const hinweise = [vorhanden ? `Kalender: ${kalName}` : `neuer Kalender „${kalName}“`];
     if (e.ort) hinweise.push(`Ort: ${e.ort}`);
+    if (e.erinnerung != null) hinweise.push(`🔔 ${Erinnerungen.text(e.erinnerung)}`);
     hinweise.push(...e.annahmen);
     platz.innerHTML = `
       <div class="kal-vorschau" style="${this.farbe(vorhanden)}" role="status">
@@ -757,6 +914,7 @@ const Kalender = {
      ========================================================= */
   klick(e) {
     const ziel = e.target;
+    if (this._gezogen) { this._gezogen = false; return; } // Klick direkt nach dem Ziehen ignorieren
 
     const knopfAnsicht = ziel.closest('[data-name="ansicht"] .auswahl-knopf');
     if (knopfAnsicht) {

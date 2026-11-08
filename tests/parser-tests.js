@@ -11,6 +11,7 @@
    sollen. Mögliche Felder:
      titel, art ('termin'/'projekt'), datum, endDatum,
      start, ende, ganztaegig, kategorie, ort,
+     erinnerung (Minuten vorher oder null),
      wdh ('keine'/'taeglich'/'woechentlich'/'monatlich'/'jaehrlich'),
      tage ([0–6], 0 = So), intervall, bis
    ========================================================= */
@@ -120,6 +121,15 @@ const TESTFAELLE = [
   { satz: 'Treffen mit Tom @Café Central morgen 15 Uhr', titel: 'Treffen mit Tom', ort: 'Café Central', start: '15:00' },
   { satz: 'Probe @"Aula der Schule" Freitag 16 Uhr #Schule', titel: 'Probe', ort: 'Aula der Schule', kategorie: 'Schule' },
 
+  // --- Erinnerungen ---
+  { satz: 'Zahnarzt morgen 14:30 Erinnerung 1 Tag vorher', titel: 'Zahnarzt', start: '14:30', ende: '15:30', erinnerung: 1440 },
+  { satz: 'Training Montag 18 Uhr 90 min erinnere mich 30 min vorher', titel: 'Training', ende: '19:30', erinnerung: 30 },
+  { satz: 'Arzt morgen 10 Uhr 2h vorher erinnern', titel: 'Arzt', start: '10:00', ende: '11:00', erinnerung: 120 },
+  { satz: 'Klausur 12.12. 8 Uhr mit Erinnerung', titel: 'Klausur', start: '08:00', erinnerung: 15 },
+  { satz: 'Geburtstag Oma 11.11. Erinnerung', titel: 'Geburtstag Oma', ganztaegig: true, erinnerung: 0 },
+  { satz: 'Abgabe Freitag Erinnerung 2 Tage vorher #Schule', titel: 'Abgabe', datum: '2026-11-13', erinnerung: 2880, kategorie: 'Schule' },
+  { satz: 'Lesen morgen 20 Uhr', titel: 'Lesen', erinnerung: null },
+
   // --- Dinge, die NICHT als Datum/Zeit erkannt werden dürfen ---
   { satz: 'Lesen', titel: 'Lesen', datum: '2026-11-08', ganztaegig: true },
   { satz: 'Mach es so wie besprochen', titel: 'Mach es so wie besprochen', datum: '2026-11-08' },
@@ -138,7 +148,7 @@ function testPruefen(fall) {
   const ist = {
     titel: e.titel, art: e.art, datum: e.datum, endDatum: e.endDatum,
     start: e.start, ende: e.ende, ganztaegig: e.ganztaegig,
-    kategorie: e.kategorie, ort: e.ort,
+    kategorie: e.kategorie, ort: e.ort, erinnerung: e.erinnerung,
     wdh: e.wiederholung.art, tage: e.wiederholung.tage,
     intervall: e.wiederholung.intervall, bis: e.wiederholung.bis
   };

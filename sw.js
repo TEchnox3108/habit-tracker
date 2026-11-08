@@ -9,7 +9,7 @@
    erhöhen. Dann holt sich das Handy die neuen Dateien.
    ========================================================= */
 
-const VERSION = 'v5';
+const VERSION = 'v6';
 const SPEICHER = `habit-tracker-${VERSION}`;
 
 // Die eigenen Dateien der App
@@ -30,6 +30,8 @@ const APP_DATEIEN = [
   './calendar-page.js',
   './calendar-forms.js',
   './projects.js',
+  './calendar-reminders.js',
+  './calendar-ics.js',
   './settings.js',
   './manifest.webmanifest',
   './icons/icon.svg',
@@ -82,6 +84,19 @@ self.addEventListener('fetch', ereignis => {
         .catch(() => gespeichert);
 
       return gespeichert || ausDemNetz;
+    })
+  );
+});
+
+// Tipp auf eine Erinnerung (Benachrichtigung): App in den Vordergrund holen bzw. öffnen
+self.addEventListener('notificationclick', ereignis => {
+  ereignis.notification.close();
+  const ziel = (ereignis.notification.data && ereignis.notification.data.url) || './#kalender';
+  ereignis.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(fenster => {
+      const offen = fenster.find(f => f.url.startsWith(self.registration.scope));
+      if (offen) return offen.focus();
+      return self.clients.openWindow(ziel);
     })
   );
 });

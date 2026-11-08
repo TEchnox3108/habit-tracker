@@ -2608,6 +2608,145 @@ button.heute-haupt {
   -webkit-line-clamp: 1;
 }
 
+/* Tastatur-Bedienung: deutlicher Rahmen um das gerade gewählte Element */
+.kal-tag:focus-visible,
+.kal-termin:focus-visible,
+.kal-ganz-termin:focus-visible,
+.kal-zeile:focus-visible,
+.kal-projekt:focus-visible,
+.kal-minimonat:focus-visible,
+.kal-streifen-tag:focus-visible,
+.kal-spaltenkopf:focus-visible,
+.kal-verw-name:focus-visible,
+.kal-text-knopf:focus-visible {
+  outline: 2px solid var(--akzent);
+  outline-offset: 2px;
+}
+
+/* Drag & Drop */
+.kal-termin[data-ziehbar] {
+  -webkit-touch-callout: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.kal-ziehgriff {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 9px;
+  cursor: ns-resize;
+}
+
+/* Kleiner Strich unten als Hinweis „hier ziehen“ (Maus: beim Drüberfahren) */
+.kal-ziehgriff::after {
+  content: '';
+  position: absolute;
+  bottom: 3px;
+  left: 50%;
+  width: 18px;
+  height: 3px;
+  border-radius: var(--rundung-voll);
+  background: var(--kat);
+  opacity: 0;
+  transform: translateX(-50%);
+  transition: opacity var(--dauer-kurz) ease;
+}
+
+.kal-termin:hover .kal-ziehgriff::after,
+.kal-termin.kal-zieht .kal-ziehgriff::after {
+  opacity: 0.8;
+}
+
+@media (hover: none) {
+  .kal-ziehgriff {
+    height: 14px; /* am Handy größer, damit man ihn mit dem Finger trifft */
+  }
+
+  .kal-ziehgriff::after {
+    opacity: 0.45;
+  }
+}
+
+.kal-termin.kal-zieht {
+  z-index: 6;
+  outline: 2px solid var(--kat);
+  outline-offset: 1px;
+  opacity: 0.92;
+  cursor: grabbing;
+}
+
+.kal-ziehen-aktiv,
+.kal-ziehen-aktiv * {
+  cursor: grabbing !important;
+  user-select: none !important;
+}
+
+/* Erinnerungs-Hinweis oben in der App */
+.kal-erinnerung {
+  position: fixed;
+  top: calc(env(safe-area-inset-top) + var(--abstand-m));
+  left: 50%;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  gap: var(--abstand-m);
+  width: min(460px, calc(100% - 2 * var(--abstand-l)));
+  padding: var(--abstand-m) var(--abstand-s) var(--abstand-m) var(--abstand-m);
+  border: 1px solid var(--linie);
+  border-left: 4px solid var(--kat);
+  border-radius: var(--rundung-gross);
+  background: var(--flaeche);
+  box-shadow: 0 8px 24px rgba(20, 18, 15, 0.12);
+  transform: translateX(-50%);
+  animation: kal-erinnerung-rein var(--dauer) var(--kurve);
+  transition: opacity 300ms ease;
+}
+
+.kal-erinnerung.weg {
+  opacity: 0;
+}
+
+.kal-erinnerung .titel-text {
+  flex: 1;
+}
+
+.kal-erinnerung .knopf.klein {
+  min-height: 32px;
+  padding: 0 var(--abstand-m);
+}
+
+@keyframes kal-erinnerung-rein {
+  from { opacity: 0; transform: translate(-50%, -12px); }
+  to   { opacity: 1; transform: translate(-50%, 0); }
+}
+
+/* Unauffälliger Text-Knopf (z. B. „In Handy-Kalender übernehmen“) */
+.kal-text-knopf {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  gap: var(--abstand-s);
+  padding: var(--abstand-xs) var(--abstand-xs);
+  border: 0;
+  border-radius: var(--rundung-klein);
+  background: transparent;
+  color: var(--akzent-text);
+  font-size: var(--schrift-klein);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.kal-text-knopf:hover {
+  background: var(--flaeche-2);
+}
+
+.kal-text-knopf svg {
+  width: 17px;
+  height: 17px;
+}
+
 /* Woche am Handy: schmale Spalten → kleinere Schrift, Wörter nicht zerhacken */
 @media (max-width: 699px) {
   .kal-raster.woche {

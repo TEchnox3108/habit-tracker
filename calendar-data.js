@@ -423,6 +423,7 @@ const KalenderDaten = {
         ende: e.ende,
         wiederholung: e.wiederholung,
         ort: e.ort || '',
+        erinnerung: e.erinnerung ?? null,
         kalenderId
       })
     };

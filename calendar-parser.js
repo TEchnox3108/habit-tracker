@@ -138,6 +138,7 @@ const QuickAdd = (() => {
     let dauer = null;      // Minuten
     let ganztaegig = false;
     let tageszeit = null;  // „abends“ usw. (nur wenn keine echte Uhrzeit dasteht)
+    let erinnerung = null; // Minuten vorher (null = keine Erinnerung)
     const wdh = { art: 'keine', tage: [], intervall: 1, bis: null };
     const annahmen = [];   // was der Parser selbst ergänzt hat
 
@@ -223,6 +224,33 @@ const QuickAdd = (() => {
       const bis = festesDatum('(?:bis|einschließlich|einschliesslich)\\s+(?:zum\\s+)?');
       if (bis) wdh.bis = schluessel(bis);
     }
+
+
+    /* ---------- 5b. Erinnerung: „Erinnerung 1 Tag vorher“, „erinnere mich 30 min vorher“,
+                      „2h vorher erinnern“, „mit Erinnerung“ (muss vor der Dauer kommen,
+                      sonst würde „30 min“ als Dauer verstanden) ---------- */
+    const EINHEIT = '(min(?:uten?)?|mins?|h|std\\.?|stunden?|tag(?:e|en)?|wochen?)';
+    const alsVorlauf = (n, einheit) => {
+      const e = einheit.toLowerCase();
+      if (e.startsWith('t')) return n * 1440;
+      if (e.startsWith('w')) return n * 10080;
+      if (e.startsWith('h') || e.startsWith('st')) return n * 60;
+      return n;
+    };
+    nimm(`${L}(?:mit\\s+)?(?:erinnerung|erinnern|erinnere\\s+mich)\\s+(?:von\\s+)?${ZAHL}\\s*${EINHEIT}(?:\\s+(?:vorher|davor|früher))?${R}`, m => {
+      const n = zahl(m[1]);
+      if (!n) return null;
+      erinnerung = alsVorlauf(n, m[2]);
+      return true;
+    }) || nimm(`${L}${ZAHL}\\s*${EINHEIT}\\s+(?:vorher|davor|früher)\\s+(?:erinnern|erinnerung)${R}`, m => {
+      const n = zahl(m[1]);
+      if (!n) return null;
+      erinnerung = alsVorlauf(n, m[2]);
+      return true;
+    }) || nimm(`${L}(?:mit\\s+)?(?:erinnerung|erinnern|erinnere\\s+mich)${R}`, () => {
+      erinnerung = 'standard'; // wird unten festgelegt (ganztägig: am Tag selbst, sonst 15 Min vorher)
+      return true;
+    });
 
 
     /* ---------- 6. „in 2 Stunden“ / „in 30 Minuten“ ---------- */
@@ -472,9 +500,12 @@ const QuickAdd = (() => {
       }
     }
 
+    if (erinnerung === 'standard') erinnerung = ganztaegig ? 0 : 15;
+
     return {
       art,
       titel,
+      erinnerung: art === 'projekt' ? null : erinnerung,
       datum: datum ? schluessel(datum) : null,
       endDatum: datum ? schluessel(endDatum || datum) : null,
       ganztaegig: art === 'projekt' ? true : ganztaegig,

@@ -140,6 +140,17 @@ const KalenderSuche = {
    Kalender verwalten (wie bei Apple: ein-/ausblenden, Farbe …)
    ========================================================= */
 const KalenderVerwaltung = {
+  // Erklärt, wie es um die Benachrichtigungen steht
+  erinnerungText() {
+    const grenze = 'Erinnerungen kommen, solange die App offen ist (am Laptop auch im Hintergrund-Tab). Ist sie ganz geschlossen, geht das ohne eigenen Server nicht – dafür gibt es unten den .ics-Export.';
+    switch (Erinnerungen.erlaubnis()) {
+      case 'granted': return `Benachrichtigungen sind erlaubt. ${grenze}`;
+      case 'denied': return `Benachrichtigungen sind in diesem Browser blockiert (ändern in den Website-Einstellungen des Browsers). Die App zeigt Erinnerungen dann nur als Hinweis. ${grenze}`;
+      case 'fehlt': return `Dieser Browser kann keine Benachrichtigungen. Die App zeigt Erinnerungen als Hinweis. ${grenze}`;
+      default: return `Damit Erinnerungen als Benachrichtigung erscheinen, muss der Browser sie einmal erlauben. ${grenze}`;
+    }
+  },
+
   oeffnen() {
     const b = KalenderDaten.bereich;
     const zeilen = KalenderDaten.kalenderListe().map(k => {
@@ -164,7 +175,23 @@ const KalenderVerwaltung = {
         <p class="karten-text">Schalter aus = Kalender ausblenden. Die Termine bleiben gespeichert. Tippe auf einen Namen, um Farbe, Icon oder Namen zu ändern.</p>
         <div class="kal-verw-liste">${zeilen}</div>
         <button type="button" class="knopf gestrichelt breit" data-kal-neu>${icon('plus')}<span>Neuer Kalender</span></button>
+
+        <h3 class="kal-abschnitt">Erinnerungen</h3>
+        <p class="karten-text">${this.erinnerungText()}</p>
+        ${Erinnerungen.erlaubnis() === 'default' ? `<button type="button" class="knopf zweit breit" data-erlauben>${icon('bell')}<span>Benachrichtigungen erlauben</span></button>` : ''}
+
+        <h3 class="kal-abschnitt">Andere Kalender-Apps</h3>
+        <p class="karten-text">Exportiert alle Termine und Projekt-Deadlines als .ics-Datei – zum Übernehmen in Apple-, Google- oder Outlook-Kalender (samt Wiederholungen und Erinnerungen).</p>
+        <button type="button" class="knopf zweit breit" data-ics-alle>${icon('download')}<span>Alle Termine als .ics exportieren</span></button>
       </div>`);
+
+    const erlauben = dialog.querySelector('[data-erlauben]');
+    if (erlauben) erlauben.onclick = async () => {
+      const antwort = await Erinnerungen.anfragen();
+      meldung(antwort === 'granted' ? 'Benachrichtigungen erlaubt' : 'Benachrichtigungen nicht erlaubt');
+      this.oeffnen();
+    };
+    dialog.querySelector('[data-ics-alle]').onclick = () => IcsExport.alle();
 
     dialog.querySelectorAll('[data-kal-sichtbar]').forEach(el => {
       el.onchange = () => {
@@ -305,8 +332,10 @@ const TerminDetail = {
           ${this.wannHtml(t, tag)}
           ${serie ? `<li>${icon('repeat')}<span>${esc(QuickAdd.wiederholungText(t.wiederholung))}</span></li>` : ''}
           ${t.ort ? `<li>${icon('map-pin')}<span>${esc(t.ort)}</span></li>` : ''}
+          ${t.erinnerung != null ? `<li>${icon('bell')}<span>Erinnerung: ${esc(Erinnerungen.text(t.erinnerung))}${t.ganztaegig ? ' <small>(bezogen auf 9:00)</small>' : ''}</span></li>` : ''}
           ${t.notiz ? `<li>${icon('notebook')}<span class="kal-notiz">${esc(t.notiz)}</span></li>` : ''}
         </ul>
+        <button type="button" class="kal-text-knopf" data-ics>${icon('calendar-plus')}<span>In Handy-Kalender übernehmen (.ics)</span></button>
         <div class="formular-knoepfe kal-detail-knoepfe">
           <button type="button" class="knopf gefahr" data-loeschen aria-label="Löschen" title="Löschen">${icon('trash-2')}<span>Löschen</span></button>
           <button type="button" class="knopf zweit" data-duplizieren aria-label="Duplizieren" title="Duplizieren">${icon('copy')}<span>Duplizieren</span></button>
@@ -317,6 +346,7 @@ const TerminDetail = {
     dialog.querySelector('[data-bearbeiten]').onclick = () => TerminFormular.oeffnen({ id, tag });
     dialog.querySelector('[data-loeschen]').onclick = () => this.loeschen(id, tag);
     dialog.querySelector('[data-duplizieren]').onclick = () => this.duplizieren(id, tag);
+    dialog.querySelector('[data-ics]').onclick = () => IcsExport.termin(id);
   },
 
   // Löschen – bei Serien mit Rückfrage „nur dieser / alle“
@@ -419,6 +449,12 @@ const TerminFormular = {
       </label>`).join('');
 
 
+    // Erinnerung: feste Auswahl (+ ein ungewöhnlicher Wert, falls per Quick Add gesetzt)
+    const erinnerungOptionen = [...Erinnerungen.OPTIONEN];
+    if (t.erinnerung != null && !erinnerungOptionen.some(o => o.wert === t.erinnerung)) {
+      erinnerungOptionen.push({ wert: t.erinnerung, text: Erinnerungen.text(t.erinnerung) });
+    }
+
     const k = KalenderDaten.kalender(kalId);
     const dialog = Dialog.oeffnen(titel || (vorhanden ? 'Termin bearbeiten' : 'Neuer Termin'), `
       <form class="formular kal-formular" style="--kat: var(--farbe-${k ? k.farbe : 'salbei'})" novalidate>
@@ -469,6 +505,14 @@ const TerminFormular = {
         </div>
 
         <label class="feld">
+          <span class="feld-titel">Erinnerung</span>
+          <select class="eingabe" name="erinnerung">
+            ${erinnerungOptionen.map(o => `<option value="${o.wert}" ${String(o.wert) === String(t.erinnerung ?? '') ? 'selected' : ''}>${esc(o.text)}</option>`).join('')}
+          </select>
+          <small class="hinweis" data-erinnerung-hinweis></small>
+        </label>
+
+        <label class="feld">
           <span class="feld-titel">Notizen</span>
           <textarea class="eingabe textfeld" name="notiz" rows="3" maxlength="1000" placeholder="optional">${esc(t.notiz)}</textarea>
         </label>
@@ -486,6 +530,14 @@ const TerminFormular = {
       const art = f.wdh.value;
       form.querySelector('[data-nur="woche"]').hidden = !(art === 'woechentlich' || art === 'zweiwoechentlich');
       form.querySelector('[data-nur="serie"]').hidden = art === 'keine';
+      // Hinweis zur Erinnerung
+      const hinweis = form.querySelector('[data-erinnerung-hinweis]');
+      const mitErinnerung = f.erinnerung.value !== '';
+      const erlaubnis = Erinnerungen.erlaubnis();
+      hinweis.textContent = !mitErinnerung ? ''
+        : (f.ganztaegig.checked ? 'Bei ganztägigen Terminen bezogen auf 9:00 Uhr. ' : '')
+          + (erlaubnis === 'denied' ? 'Benachrichtigungen sind im Browser blockiert – die App zeigt die Erinnerung nur als Hinweis, solange sie offen ist.'
+            : 'Klappt, solange die App offen ist. Sicherer am Handy: Termin als .ics in die Kalender-App übernehmen.');
     };
     aktualisieren();
 
@@ -531,6 +583,7 @@ const TerminFormular = {
         start: ganz ? null : f.startZeit.value,
         ende: ganz ? null : f.endZeit.value,
         kalenderId: f.kalender.value,
+        erinnerung: f.erinnerung.value === '' ? null : Number(f.erinnerung.value),
         wiederholung: {
           art: art === 'zweiwoechentlich' || art === 'eigen' && w.art === 'woechentlich' ? 'woechentlich' : art === 'eigen' ? w.art : art,
           intervall: art === 'zweiwoechentlich' ? 2 : art === 'eigen' ? w.intervall : 1,
@@ -555,6 +608,8 @@ const TerminFormular = {
       }
       if (neu.wiederholung.art !== 'woechentlich') neu.wiederholung.tage = [];
       if (neu.kalenderId === '__neu__') neu.kalenderId = KalenderDaten.kalenderFuerTag(neuerKalender).id;
+      // Erste Erinnerung → Browser um Erlaubnis für Benachrichtigungen bitten
+      if (neu.erinnerung !== null) Erinnerungen.anfragen();
 
       let gespeichert;
       if (!vorhanden) {

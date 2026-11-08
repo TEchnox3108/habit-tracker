@@ -111,7 +111,72 @@ Darauf achten:
 
 ---
 
-## 5. Wo ändere ich was?
+## 5. Kalender (Termine & Projekte)
+
+Der Reiter **Kalender** funktioniert ähnlich wie die Apple-Kalender-App – im Look dieser App.
+
+### Termine per Satz eintragen (Quick Add)
+Oben ins Feld einen Satz schreiben → **Enter** → eine Vorschau zeigt, was erkannt wurde
+(z. B. „Zahnarzt – Mo, 9. Nov, 14:30–15:30“) → nochmal **Enter** = eingetragen.
+Während die Vorschau offen ist, kannst du den Satz weiter verbessern. Mit dem **Stift** öffnest du
+stattdessen das Formular, mit **Esc** oder **×** verwirfst du sie.
+
+| Du schreibst | Die App versteht |
+|---|---|
+| `Zahnarzt morgen 14:30 1h` | morgen, 14:30–15:30 |
+| `Mathe-Klausur 12.12. 8:00 bis 9:30` | 12. Dezember, 8:00–9:30 |
+| `Training jeden Montag 18 Uhr 90 min #Fitness` | jeden Montag 18:00–19:30, Kalender „Fitness“ |
+| `Arbeit Getränkemarkt Samstag 10-16 Uhr` | kommender Samstag, 10–16 Uhr |
+| `Geburtstag Oma 11.11. ganztägig` | ganztägig |
+| `Skiurlaub 27.12. bis 3.1.` | mehrere Tage |
+| `Oma besuchen nächste Woche Freitag` · `in 3 Tagen` · `übermorgen` | Datum in Worten |
+| `Physio jeden Dienstag bis 15.12. 8 Uhr` | Serie mit Enddatum |
+| `Vokabeln jeden Mo und Mi 17 Uhr` · `dienstags` · `werktags` · `täglich` · `alle 2 Wochen` · `monatlich` | Wiederholungen |
+| `Zahnarzt Do 9:30 @Praxis Dr. Klein` | Ort (alles hinter dem @) |
+| `Arzt morgen 10 Uhr Erinnerung 1 Tag vorher` · `mit Erinnerung` · `30 min vorher erinnern` | Erinnerung |
+| `Projekt Leporello bis 08.12. #Schule` | legt ein **Projekt** mit Deadline an |
+
+Fehlt etwas, nimmt die App sinnvolle Werte: ohne Uhrzeit → ganztägig, ohne Dauer → 1 Stunde,
+ohne Datum → heute (ist die Uhrzeit heute schon vorbei → morgen). Ein unbekannter `#Name` legt einen neuen Kalender an.
+
+**Testseite:** Doppelklick auf `tests/parser-tests.html` zeigt rund 100 Beispielsätze (grün = richtig erkannt)
+und hat ein Feld zum Ausprobieren. Findest du einen Satz, den die App falsch versteht: Claude Bescheid sagen.
+
+### Ansichten
+- Oben umschalten: **Kalender | Anstehend | Projekte**, im Kalender dann **Tag | Woche | Monat | Jahr**.
+- **‹ Heute ›** zum Blättern; am Handy auch **nach links/rechts wischen**, am Laptop **Pfeiltasten** (T = heute).
+- **Monat:** Tag antippen zeigt seine Termine darunter, nochmal antippen öffnet die Tagesansicht.
+- **Tag & Woche:** roter Strich = jetzt. Ganztägige Termine stehen oben. Tipp auf eine freie Stelle = neuer Termin zu dieser Uhrzeit.
+- **Verschieben:** Termin ziehen (am Handy: kurz gedrückt halten, dann ziehen). **Länge ändern:** am unteren Rand ziehen.
+  Raster: 15 Minuten. Bei Serien fragt die App „Nur dieser Termin“ oder „Alle“.
+- **Anstehend:** alles Kommende nach Tagen sortiert, überfällige Projekte ganz oben.
+
+### Termine & Kalender verwalten
+- Termin antippen → **Details** mit Bearbeiten, Duplizieren, Löschen und „In Handy-Kalender übernehmen (.ics)“.
+- **+** oben = neuer Termin über ein Formular (im Bereich „Projekte“: neues Projekt).
+- 🔍 = **Suche** über Titel, Ort, Notizen und Kalender.
+- ◫ = **Kalender verwalten**: ein-/ausblenden, Name, Farbe, Icon, Standard-Kalender; dazu Erinnerungen
+  und „Alle Termine als .ics exportieren“.
+
+### Projekte
+Projekte haben eine **Deadline** („noch 30 Tage“, kurz vorher gelb, überfällig rot), optionale
+**Teilschritte** zum Abhaken und einen **Fortschritt** in Prozent (aus den Teilschritten berechnet oder per Regler).
+Die Deadline erscheint mit Fähnchen im Kalender.
+
+### Erinnerungen – was geht und was nicht
+- Pro Termin kannst du eine Erinnerung wählen (z. B. 15 Min, 1 Std, 1 Tag vorher; bei ganztägigen Terminen bezogen auf 9:00 Uhr).
+- Die App erinnert, **solange sie offen ist** (am Laptop auch in einem Hintergrund-Tab): als Benachrichtigung
+  (der Browser fragt einmal um Erlaubnis) und als Hinweis oben in der App.
+- **Ist die App ganz geschlossen, kann sie nicht erinnern.** Dafür bräuchte man einen eigenen Server mit
+  Push-Nachrichten. Die zuverlässige Alternative: Termin öffnen → **„In Handy-Kalender übernehmen (.ics)“**.
+  Dann übernimmt die Kalender-App deines Handys den Termin samt Erinnerung und meldet sich pünktlich.
+- Am iPhone funktionieren Benachrichtigungen von Web-Apps nur eingeschränkt – dort ist der .ics-Weg am sichersten.
+
+Termine, Projekte und Kalender sind im **Backup (Export/Import)** enthalten.
+
+---
+
+## 6. Wo ändere ich was?
 
 | Was du ändern willst | Wo |
 |---|---|
@@ -125,6 +190,12 @@ Darauf achten:
 | **Weisheiten** (hinzufügen, ändern) und **Epochen-Farben** | `wisdom.js` (siehe Abschnitt 4) |
 | **Schrift der Zitate** | `styles.css` → `--schrift-zitat` |
 | **Texte auf der Seite „Weisheit“** | `wisdom-page.js` |
+| **Kalender: Start-Kalender** (nur für den allerersten Start) | `config.js` → `startKalender` – danach direkt in der App unter ◫ |
+| **Kalender: welche Sätze Quick Add versteht** | `calendar-parser.js` (Testfälle in `tests/parser-tests.js`) |
+| **Kalender: Ansichten** | `calendar-page.js` · **Formulare, Suche, Kalender verwalten:** `calendar-forms.js` |
+| **Projekte** | `projects.js` |
+| **Erinnerungen** (Auswahl, Ablauf) | `calendar-reminders.js` · **.ics-Export:** `calendar-ics.js` |
+| **Farbe des „Jetzt“-Strichs** | `styles.css` → `--jetzt-linie` |
 | **Texte auf der Seite „Heute“** | `today.js` |
 | **Texte auf der Seite „Statistik“** | `stats.js` |
 | **Texte auf der Seite „Gewohnheiten“** | `habits.js` |
@@ -144,18 +215,26 @@ Darauf achten:
 | `stats.js` | Seite „Statistik“ |
 | `wisdom.js` | Alle Weisheiten, Philosophen und Epochen (nur Inhalte) |
 | `wisdom-page.js` | Seite „Weisheit“ |
+| `calendar-parser.js` | Kalender: versteht Sätze wie „Zahnarzt morgen 14:30“ |
+| `calendar-data.js` | Kalender: Termine, Projekte und Kalender speichern, Serien ausrechnen, Suche |
+| `calendar-page.js` | Seite „Kalender“ (Tag, Woche, Monat, Jahr, Anstehend, Drag & Drop) |
+| `calendar-forms.js` | Kalender: Detailansicht, Formular, Suche, Kalender verwalten |
+| `projects.js` | Kalender: Projekte mit Deadline und Teilschritten |
+| `calendar-reminders.js` | Kalender: Erinnerungen |
+| `calendar-ics.js` | Kalender: Export als .ics-Datei |
+| `tests/` | Testseite für Quick Add (`parser-tests.html`) |
 | `habits.js` | Seite „Gewohnheiten“ |
 | `settings.js` | Seite „Einstellungen“ |
 | `manifest.webmanifest`, `sw.js`, `icons/` | Alles für die Handy-App |
 | `CLAUDE.md` | Anleitung für Claude (wie das Projekt aufgebaut ist) |
 
-**Nach Änderungen an der Internet-Version:** In `sw.js` die Zeile `const VERSION = 'v2';` um eins erhöhen
-(z. B. `'v3'`) und neu hochladen – sonst zeigt das Handy evtl. noch kurz die alte Version.
+**Nach Änderungen an der Internet-Version:** In `sw.js` die Zeile `const VERSION = 'v6';` um eins erhöhen
+(z. B. `'v7'`) und neu hochladen – sonst zeigt das Handy evtl. noch kurz die alte Version.
 Wenn du Claude um Änderungen bittest, erledigt Claude das mit.
 
 ---
 
-## 6. So kannst du Claude um Änderungen bitten
+## 7. So kannst du Claude um Änderungen bitten
 
 Du kannst ganz normal auf Deutsch schreiben. Ein paar Beispiele:
 
@@ -177,6 +256,12 @@ Du kannst ganz normal auf Deutsch schreiben. Ein paar Beispiele:
 - „Nimm Voltaire als neuen Philosophen in die Aufklärung auf.“
 - „Die Zitate sollen etwas kleiner sein.“
 - „Ich möchte eine Erinnerung, die Notiz zur Tagesweisheit abends auszufüllen.“
+
+**Kalender**
+- „Quick Add soll auch ‚nächsten Monat am 3.‘ verstehen.“
+- „Zeig auf der Seite ‚Heute‘ auch meine Termine von heute.“
+- „Verknüpfe den Kalender mit meinen Gewohnheiten: Training-Termine sollen ‚Training‘ abhaken.“
+- „Mach den ‚Jetzt‘-Strich Staubblau statt rot.“
 
 **Statistik**
 - „Zeig in der Statistik auch, an welchem Wochentag ich am fleißigsten bin.“
