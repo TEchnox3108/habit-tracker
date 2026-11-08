@@ -116,6 +116,10 @@ const TESTFAELLE = [
   { satz: 'Silvester-Countdown 31.12. 24 Uhr', titel: 'Silvester-Countdown', datum: '2027-01-01', start: '00:00', ende: '01:00' },
   { satz: 'Zahnarzt Dienstag den 10.11. um 8.15', titel: 'Zahnarzt', datum: '2026-11-10', start: '08:15' },
 
+  { satz: 'Zahnarzt Do 14:30 1h @Praxis Dr. Klein', titel: 'Zahnarzt', datum: '2026-11-12', ort: 'Praxis Dr. Klein' },
+  { satz: 'Treffen mit Tom @Café Central morgen 15 Uhr', titel: 'Treffen mit Tom', ort: 'Café Central', start: '15:00' },
+  { satz: 'Probe @"Aula der Schule" Freitag 16 Uhr #Schule', titel: 'Probe', ort: 'Aula der Schule', kategorie: 'Schule' },
+
   // --- Dinge, die NICHT als Datum/Zeit erkannt werden dürfen ---
   { satz: 'Lesen', titel: 'Lesen', datum: '2026-11-08', ganztaegig: true },
   { satz: 'Mach es so wie besprochen', titel: 'Mach es so wie besprochen', datum: '2026-11-08' },

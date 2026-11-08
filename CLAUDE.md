@@ -26,7 +26,7 @@ Testen: Der eingebaute Browser zeigt `file://`-Seiten nur als Schnappschuss ohne
 ## Dateien & Architektur
 | Datei | Zweck |
 |---|---|
-| `index.html` | Gerüst: Navigation + fünf `<section class="seite">` (heute, weisheit, statistik, gewohnheiten, einstellungen) |
+| `index.html` | Gerüst: Navigation + sechs `<section class="seite">` (heute, kalender, weisheit, statistik, gewohnheiten, einstellungen) |
 | `styles.css` | Gesamtes Aussehen. **Abschnitt 1 enthält alle Design-Variablen** (Farben, Schrift, Abstände, Rundungen) – Design nur dort ändern |
 | `config.js` | `KONFIG`: App-Name, Version, Farbauswahl, Icon-Auswahl, `startKategorien` (12 Kategorien mit Beispiel-Gewohnheiten, nur beim allerersten Start verwendet) |
 | `data.js` | `Daten` (Laden/Speichern von `Daten.zustand`, CRUD für Kategorien/Gewohnheiten, `gewohnheitVorlage()` mit allen Standardfeldern, `reihenfolgeUebernehmen()` nach Drag & Drop, Einträge `wert`/`wertSetzen`/`notizSetzen`, **Auswertung** `istErledigt`/`fortschritt`/`wochenErledigt`/`istFaellig` – Statistik in Phase 4 soll diese wiederverwenden) und `Datum` (deutsche Formate, Tages-Schlüssel `JJJJ-MM-TT`, `heute`, `plusTage`, `wocheVon`, `ausSchluessel`). `Daten.laden()` steht ganz unten, weil es `Datum` braucht |
@@ -37,6 +37,8 @@ Testen: Der eingebaute Browser zeigt `file://`-Seiten nur als Schnappschuss ohne
 | `wisdom-page.js` | `Weisheit` + `Seiten.weisheit`: Tagesauswahl, Ansichten Heute/Archiv/Favoriten, Filter, Detail-Dialog, Notizen (verzögert gespeichert, `notizenJetztSpeichern()` beim Verlassen), Kopieren/Teilen, `vorschauHtml()` für „Heute“ |
 | `calendar-parser.js` | `QuickAdd` (eigenständig, ohne App-Abhängigkeiten): `parse(satz, bezug)` erkennt Titel, Datum, Zeit, Dauer, ganztägig, Wiederholung, #Kategorie, @Ort, „Projekt …“; `beschreibung()` für die Vorschau. Kein chrono-node (nur als ES-Modul, schwaches Deutsch). Tests: `tests/parser-tests.html` (Doppelklick, fester Bezug So 08.11.2026 10:00) – bei neuen Regeln Testfall in `tests/parser-tests.js` ergänzen |
 | `calendar-data.js` | `KalenderDaten`: Kalender (Apple-artig, Farbe, ausblendbar; Start-Kalender mit festen ids aus `KONFIG.startKalender`), Termine (`terminVorlage`, Serien als Regel + `vorkommen(von, bis)` rechnet Tage aus, Ausnahmen), Projekte (Deadline, Teilschritte, `projektFortschritt`), `ausQuickAdd()`, `auffuellen()` nach Import |
+| `calendar-page.js` | `Kalender` + `Seiten.kalender`: Kopf, Quick-Add-Feld (Enter = Vorschau, zweites Enter = eintragen, Weitertippen ändert die Vorschau), Ansichten Tag (Wochenstreifen + Raster) / Woche (Raster) / Monat (Punkte am Handy, kurze Einträge ab 700px, Tagesliste darunter) / Jahr. Nur `ansichtNeu()` baut die Ansicht neu (Eingabefeld behält den Fokus). Stundenraster: `STUNDE` = 48px, `anordnen()` legt Überlappungen nebeneinander, „Jetzt“-Linie alle 30 s. Wischen und ←/→/T zum Blättern. Seite ist am Laptop breiter (`.inhalt:has(#seite-kalender)` setzt `--inhalt-breite`) |
+| `calendar-forms.js` | `TerminDetail` (Detail, Löschen/Duplizieren), `TerminFormular` (Anlegen/Bearbeiten; Beginn verschieben schiebt das Ende mit), `auswahlFrage()` für „Nur dieser Termin / Alle“. Serie ändern „nur dieser“ = Ausnahme + neuer Einzeltermin; „alle“ = `serieVerschieben()` |
 | `habits.js` | `Seiten.gewohnheiten`: Liste, Formulare für Kategorie/Gewohnheit, Drag & Drop (SortableJS mit `forceFallback`), Texte wie `gewohnheitBeschreibung()`/`haeufigkeitText()` |
 | `settings.js` | `Seiten.einstellungen`: Darstellung, Wochenstart, „Als App installieren“ (je nach `PWA`-Zustand), Daten & Backup (Export als JSON-Download, Import über `<input type=file>` + `Daten.importieren`, Zurücksetzen) |
 | `manifest.webmanifest`, `sw.js`, `icons/` | PWA. Icons sind PNGs (192/512/maskable/apple-touch 180) + `icon.svg` als Favicon; Motiv: weißer Haken auf `#7e9c85` |
@@ -71,7 +73,7 @@ Zusammenspiel:
 - Nutzertexte immer mit `esc()` einsetzen.
 
 ## Design-Vorgaben
-Matt und ruhig: keine Verläufe, kein Glanz, keine Neonfarben; gedämpfte Palette; viel Weißraum; Rundungen 14–20px; feine Linien statt Schatten; Schrift Inter; nur sanfte, kurze Animationen. Mobile-first, untere Navigationsleiste am Handy mit fünf Punkten (Beschriftung bis 420px Breite verkleinert, damit „Gewohnheiten“/„Einstellungen“ nicht aneinanderstoßen; ab 900px Breite: Leiste links). Oberfläche komplett Deutsch, Datum `TT.MM.JJJJ`.
+Matt und ruhig: keine Verläufe, kein Glanz, keine Neonfarben; gedämpfte Palette; viel Weißraum; Rundungen 14–20px; feine Linien statt Schatten; Schrift Inter; nur sanfte, kurze Animationen. Mobile-first, untere Navigationsleiste am Handy mit sechs Punkten (bis 520px Breite nur Symbole, Beschriftung nur beim aktiven Punkt – vom Nutzer so gewählt; ab 900px Breite: Leiste links). Oberfläche komplett Deutsch, Datum `TT.MM.JJJJ`.
 
 ## Phasen (Stand)
 1. ✅ Grundgerüst, Design-System, Dark/Light, Navigation
@@ -80,7 +82,7 @@ Matt und ruhig: keine Verläufe, kein Glanz, keine Neonfarben; gedämpfte Palett
 4. ✅ Statistik: Streaks, Heatmap, Wochen/Monat pro Kategorie, Chart.js-Diagramme, Erfolgsquote
 5. ✅ Export/Import (JSON), Zurücksetzen, PWA (manifest + sw.js), Feinschliff (bis 320px Breite getestet), README.md
 6. ✅ Reiter „Weisheit des Tages“ (Version 1.1)
-7. Reiter „Kalender“ (Apple-Kalender-artig, in 4 Phasen): ✅ K1 Datenstruktur + Quick-Add-Parser + Tests · K2 Monat/Woche/Tag/Jahr + Detail · K3 Projekte, Kalender verwalten, Suche, „Anstehend“ · K4 Drag & Drop, Erinnerungen (Benachrichtigung nur bei offener App + .ics-Export), Feinschliff. Navigation dann 6 Punkte: am schmalen Handy nur Symbole, Beschriftung nur beim aktiven Punkt (vom Nutzer gewählt)
+7. Reiter „Kalender“ (Apple-Kalender-artig, in 4 Phasen): ✅ K1 Datenstruktur + Quick-Add-Parser + Tests · ✅ K2 Monat/Woche/Tag/Jahr + Detail · K3 Projekte, Kalender verwalten, Suche, „Anstehend“ · K4 Drag & Drop, Erinnerungen (Benachrichtigung nur bei offener App + .ics-Export), Feinschliff. Navigation dann 6 Punkte: am schmalen Handy nur Symbole, Beschriftung nur beim aktiven Punkt (vom Nutzer gewählt)
 
 ## Veröffentlichung (GitHub Pages)
 - Repo: https://github.com/TEchnox3108/habit-tracker (öffentlich, Branch `main`), live unter https://technox3108.github.io/habit-tracker/

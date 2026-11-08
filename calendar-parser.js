@@ -145,7 +145,9 @@ const QuickAdd = (() => {
     /* ---------- 1. #Kategorie und @Ort ---------- */
     nimm('(?<=^|\\s)#([\\p{L}\\p{N}_\\-]+)', m => { if (!kategorie) kategorie = m[1]; return true; });
     while (nimm('(?<=^|\\s)#([\\p{L}\\p{N}_\\-]+)', () => true)); // weitere Tags entfernen
-    nimm('(?<=^|\\s)@(?:"([^"]+)"|([\\p{L}\\p{N}_\\-./]+))', m => { ort = m[1] || m[2]; return true; });
+    // @"Ort mit Leerzeichen" sofort; @Ort ohne Anführungszeichen erst ganz am Ende (Schritt 12),
+    // dann gehört alles hinter dem @ zum Ort („@Praxis Dr. Klein“)
+    nimm('(?<=^|\\s)@"([^"]+)"', m => { ort = m[1]; return true; });
 
 
     /* ---------- 2. Projekt? („Projekt Leporello bis 08.12.“) ---------- */
@@ -398,6 +400,15 @@ const QuickAdd = (() => {
     /* ---------- 12. Titel = was übrig bleibt ---------- */
     const STOPP_VORNE = /^(?:am|um|ab|von|vom|bis|den|zum|uhr|und|,|-|–|:)$/i;
     const STOPP_HINTEN = /^(?:am|um|ab|von|vom|bis|den|zum|zur|uhr|und|für|in|im|an|,|-|–|:)$/i;
+
+    // @Ort: alles ab dem @ (Datum, Zeit usw. sind schon herausgeschnitten)
+    const atStelle = rest.search(/(?<=^|\s)@\S/);
+    if (!ort && atStelle >= 0) {
+      const ortWoerter = rest.slice(atStelle + 1).replace(/\s+/g, ' ').trim().split(' ');
+      while (ortWoerter.length && STOPP_HINTEN.test(ortWoerter[ortWoerter.length - 1])) ortWoerter.pop();
+      ort = ortWoerter.join(' ').replace(/[,;:]+$/, '');
+      rest = rest.slice(0, atStelle);
+    }
     const woerter = rest.replace(/\s+/g, ' ').trim().split(' ').filter(Boolean);
     while (woerter.length && STOPP_VORNE.test(woerter[0])) woerter.shift();
     while (woerter.length && STOPP_HINTEN.test(woerter[woerter.length - 1])) woerter.pop();
@@ -513,12 +524,18 @@ const QuickAdd = (() => {
 
   // Ganze Vorschau-Zeile für ein parse()-Ergebnis
   function beschreibung(e, bezug = new Date()) {
+    if (e.art === 'projekt') return `Projekt ${e.titel} – ${wannText(e, bezug)}`;
+    return `${e.titel} – ${wannText(e, bezug)}`;
+  }
+
+  // Nur der Zeit-Teil: „Mo, 9. Nov, 14:30–15:30 · jeden Montag“
+  function wannText(e, bezug = new Date()) {
     if (e.art === 'projekt') {
-      if (!e.datum) return `Projekt ${e.titel} – ohne Deadline`;
+      if (!e.datum) return 'ohne Deadline';
       const heute = new Date(bezug); heute.setHours(0, 0, 0, 0);
       const tage = Math.round((ausSchluessel(e.datum) - heute) / 86400000);
       const noch = tage === 0 ? 'heute' : tage === 1 ? 'noch 1 Tag' : tage > 1 ? `noch ${tage} Tage` : `${-tage} Tage überfällig`;
-      return `Projekt ${e.titel} – Deadline ${datumText(e.datum, bezug)} (${noch})`;
+      return `Deadline ${datumText(e.datum, bezug)} (${noch})`;
     }
     let zeit;
     if (e.ganztaegig) {
@@ -531,8 +548,8 @@ const QuickAdd = (() => {
       zeit = `${datumText(e.datum, bezug)}, ${e.start}–${e.ende}`;
     }
     const wdh = wiederholungText(e.wiederholung);
-    return `${e.titel} – ${zeit}${wdh ? ' · ' + wdh : ''}`;
+    return `${zeit}${wdh ? ' · ' + wdh : ''}`;
   }
 
-  return { parse, beschreibung, datumText, wiederholungText, WT_ANZEIGE, MONATE_ANZEIGE };
+  return { parse, beschreibung, wannText, datumText, wiederholungText, WT_ANZEIGE, MONATE_ANZEIGE };
 })();

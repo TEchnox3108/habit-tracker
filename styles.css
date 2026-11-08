@@ -80,6 +80,7 @@
   --akzent-text: #557360;   /* Akzentfarbe für Schrift (etwas dunkler, gut lesbar) */
   --auf-akzent: #ffffff;    /* Schrift auf akzentfarbigen Knöpfen */
   --gefahr: #b4614b;        /* für "Löschen" & Warnungen */
+  --jetzt-linie: var(--gefahr); /* Strich für die aktuelle Uhrzeit im Kalender */
   --schatten: 0 1px 2px rgba(45, 38, 25, 0.04);
   color-scheme: light;
 }
@@ -1998,6 +1999,931 @@ button.heute-haupt {
   margin-top: var(--abstand-l);
 }
 
+/* ---- Seite "Kalender" ---- */
+
+/* Der Kalender darf am Laptop breiter sein als die anderen Seiten */
+.inhalt:has(> #seite-kalender:not([hidden])) {
+  --inhalt-breite: 1080px;
+}
+
+.kal-kopf {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--abstand-m);
+}
+
+.kal-plus {
+  width: 42px;
+  height: 42px;
+  color: var(--akzent-text);
+  background: color-mix(in srgb, var(--akzent) var(--toenung), transparent);
+}
+
+.kal-plus:hover {
+  color: var(--akzent-text);
+  background: color-mix(in srgb, var(--akzent) 25%, transparent);
+}
+
+/* Quick-Add-Feld */
+.kal-schnell {
+  position: relative;
+}
+
+.kal-schnell .eingabe {
+  min-height: 50px;
+  padding-left: 44px;
+  background: var(--flaeche);
+  border-radius: var(--rundung-gross);
+}
+
+.kal-schnell-icon {
+  position: absolute;
+  top: 50%;
+  left: 15px;
+  display: grid;
+  color: var(--akzent-text);
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.kal-schnell-icon svg {
+  width: 19px;
+  height: 19px;
+}
+
+/* Vorschau nach Enter */
+.kal-vorschau {
+  display: flex;
+  align-items: center;
+  gap: var(--abstand-m);
+  padding: var(--abstand-m) var(--abstand-m) var(--abstand-m) var(--abstand-l);
+  border: 1px solid var(--linie);
+  border-radius: var(--rundung-gross);
+  background: var(--flaeche);
+  animation: einblenden var(--dauer) var(--kurve);
+}
+
+.kal-vorschau-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.35;
+}
+
+.kal-vorschau-text > small:first-child {
+  color: var(--text-3);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.kal-vorschau-text strong {
+  font-size: var(--schrift-gross);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.kal-vorschau-hinweis {
+  margin-top: 2px;
+  color: var(--text-2);
+  font-size: 0.75rem;
+}
+
+.kal-vorschau-knoepfe {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--abstand-xs);
+  flex-shrink: 0;
+}
+
+.kal-vorschau-neben {
+  display: flex;
+}
+
+.kal-vorschau-neben .icon-knopf {
+  width: 34px;
+  height: 34px;
+}
+
+/* Farbiger Strich links (Vorschau, Listen, Detail) */
+.kal-strich {
+  align-self: stretch;
+  width: 4px;
+  min-height: 34px;
+  border-radius: var(--rundung-voll);
+  background: var(--kat);
+  flex-shrink: 0;
+}
+
+/* Leiste „KW 46 · …“ + ‹ Heute › */
+.kal-leiste {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--abstand-s);
+  margin: calc(var(--abstand-s) * -1) 0;
+  padding-left: var(--abstand-xs);
+}
+
+.kal-leiste-text {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--text-2);
+  font-size: var(--schrift-klein);
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.kal-blaettern {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.kal-blaettern .knopf.klein {
+  min-height: 34px;
+  padding: 0 var(--abstand-m);
+}
+
+/* Sanftes Hereingleiten beim Blättern */
+.kal-rein-vor { animation: kal-vor var(--dauer) var(--kurve); }
+.kal-rein-zurueck { animation: kal-zurueck var(--dauer) var(--kurve); }
+
+@keyframes kal-vor {
+  from { opacity: 0; transform: translateX(14px); }
+  to   { opacity: 1; transform: none; }
+}
+
+@keyframes kal-zurueck {
+  from { opacity: 0; transform: translateX(-14px); }
+  to   { opacity: 1; transform: none; }
+}
+
+.kal-ansicht {
+  display: flex;
+  flex-direction: column;
+  gap: var(--abstand-l);
+  touch-action: pan-y; /* waagerechtes Wischen gehört uns (blättern) */
+}
+
+/* -- Monat -- */
+.kal-monat {
+  padding: var(--abstand-s) var(--abstand-xs) var(--abstand-xs);
+  border: 1px solid var(--linie);
+  border-radius: var(--rundung-gross);
+  background: var(--flaeche);
+}
+
+.kal-wochenkopf,
+.kal-tage {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+
+.kal-wochenkopf span {
+  padding-bottom: var(--abstand-xs);
+  color: var(--text-3);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.kal-tag {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  min-width: 0;
+  min-height: 54px;
+  padding: 5px 2px;
+  border: 0;
+  border-top: 1px solid var(--linie);
+  background: transparent;
+  cursor: pointer;
+}
+
+.kal-tag-nr {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: var(--rundung-voll);
+  font-size: var(--schrift-normal);
+  font-weight: 500;
+  transition: background-color var(--dauer-kurz) ease;
+}
+
+.kal-tag.anders .kal-tag-nr {
+  color: var(--text-3);
+}
+
+.kal-tag.heute .kal-tag-nr {
+  color: var(--akzent-text);
+  font-weight: 700;
+}
+
+.kal-tag.gewaehlt .kal-tag-nr {
+  background: var(--text);
+  color: var(--hintergrund);
+  font-weight: 600;
+}
+
+.kal-tag.heute.gewaehlt .kal-tag-nr {
+  background: var(--akzent);
+  color: var(--auf-akzent);
+}
+
+.kal-tag:hover:not(.gewaehlt) .kal-tag-nr {
+  background: var(--flaeche-2);
+}
+
+.kal-punkte {
+  display: flex;
+  gap: 3px;
+  height: 6px;
+}
+
+.kal-punkte i {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--rundung-voll);
+  background: var(--kat);
+}
+
+.kal-eintraege {
+  display: none; /* nur am Laptop, siehe unten */
+}
+
+/* Liste der Termine eines Tages */
+.kal-tagesliste {
+  padding-bottom: var(--abstand-m);
+}
+
+.kal-zeilen {
+  display: flex;
+  flex-direction: column;
+  margin: var(--abstand-s) calc(var(--abstand-s) * -1) 0;
+}
+
+.kal-zeile {
+  display: flex;
+  align-items: center;
+  gap: var(--abstand-m);
+  width: 100%;
+  padding: var(--abstand-s);
+  border: 0;
+  border-radius: var(--rundung);
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+
+.kal-zeile:hover {
+  background: var(--flaeche-2);
+}
+
+.kal-zeile .titel-text {
+  flex: 1;
+}
+
+.kal-zeile-icon {
+  display: grid;
+  color: var(--text-3);
+}
+
+.kal-zeile-icon svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* -- Jahr -- */
+.kal-jahr {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--abstand-m);
+}
+
+.kal-minimonat {
+  display: flex;
+  flex-direction: column;
+  gap: var(--abstand-xs);
+  min-width: 0;
+  padding: var(--abstand-m) var(--abstand-s) var(--abstand-s);
+  border: 1px solid var(--linie);
+  border-radius: var(--rundung);
+  background: var(--flaeche);
+  text-align: left;
+  cursor: pointer;
+}
+
+.kal-minimonat:hover {
+  border-color: var(--text-3);
+}
+
+.kal-minimonat-name {
+  padding-left: var(--abstand-xs);
+  font-weight: 600;
+}
+
+.kal-minimonat.aktuell .kal-minimonat-name {
+  color: var(--akzent-text);
+}
+
+.kal-minikopf,
+.kal-minitage {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  font-size: 0.625rem;
+  text-align: center;
+}
+
+.kal-minikopf {
+  color: var(--text-3);
+  font-weight: 600;
+}
+
+.kal-minitage span {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  border-radius: var(--rundung-voll);
+  color: var(--text-2);
+}
+
+.kal-minitage .hat {
+  color: var(--text);
+  font-weight: 700;
+}
+
+.kal-minitage .heute {
+  background: var(--akzent);
+  color: var(--auf-akzent);
+  font-weight: 700;
+}
+
+/* -- Tag: Wochenstreifen wie am iPhone -- */
+.kal-streifen {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 2px;
+}
+
+.kal-streifen-tag {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: var(--abstand-xs) 0;
+  border: 0;
+  border-radius: var(--rundung);
+  background: transparent;
+  cursor: pointer;
+}
+
+.kal-streifen-tag small {
+  color: var(--text-3);
+  font-size: 0.6875rem;
+  font-weight: 600;
+}
+
+.kal-streifen-tag span {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--rundung-voll);
+  font-weight: 500;
+}
+
+.kal-streifen-tag.heute span {
+  color: var(--akzent-text);
+  font-weight: 700;
+}
+
+.kal-streifen-tag.gewaehlt span {
+  background: var(--text);
+  color: var(--hintergrund);
+}
+
+.kal-streifen-tag.heute.gewaehlt span {
+  background: var(--akzent);
+  color: var(--auf-akzent);
+}
+
+.kal-streifen-tag i {
+  width: 5px;
+  height: 5px;
+  border-radius: var(--rundung-voll);
+}
+
+.kal-streifen-tag i.an {
+  background: var(--text-3);
+}
+
+/* -- Woche & Tag: Stundenraster -- */
+.kal-raster {
+  --zeitspalte: 46px;
+  overflow: hidden;
+  border: 1px solid var(--linie);
+  border-radius: var(--rundung-gross);
+  background: var(--flaeche);
+}
+
+.kal-raster-kopf,
+.kal-ganz,
+.kal-raster-innen {
+  display: grid;
+  grid-template-columns: var(--zeitspalte) repeat(var(--spalten), minmax(0, 1fr));
+}
+
+.kal-raster-kopf {
+  border-bottom: 1px solid var(--linie);
+}
+
+.kal-spaltenkopf {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--abstand-s) 0 var(--abstand-xs);
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  line-height: 1.2;
+}
+
+.kal-spaltenkopf small {
+  color: var(--text-3);
+  font-size: 0.6875rem;
+  font-weight: 600;
+}
+
+.kal-spaltenkopf span {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  margin-top: 2px;
+  border-radius: var(--rundung-voll);
+  font-weight: 600;
+}
+
+.kal-spaltenkopf.heute span {
+  background: var(--akzent);
+  color: var(--auf-akzent);
+}
+
+/* Ganztägige Termine oben */
+.kal-ganz {
+  border-bottom: 1px solid var(--linie);
+}
+
+.kal-ganz.leer {
+  display: none;
+}
+
+.kal-ganz-name {
+  padding: 6px 4px 0 0;
+  color: var(--text-3);
+  font-size: 0.5625rem;
+  text-align: right;
+}
+
+.kal-ganz-zelle {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  padding: 3px 2px;
+  border-left: 1px solid var(--linie);
+}
+
+.kal-ganz-termin {
+  overflow: hidden;
+  padding: 2px 6px;
+  border: 0;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--kat) 22%, var(--flaeche));
+  color: var(--text);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+/* Scrollbereich mit 24 Stunden */
+.kal-scroll {
+  position: relative;
+  height: calc(100dvh - 400px);
+  min-height: 340px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.kal-raster-innen {
+  position: relative;
+}
+
+.kal-stunden {
+  position: relative;
+}
+
+.kal-stunden span {
+  position: absolute;
+  right: 6px;
+  color: var(--text-3);
+  font-size: 0.625rem;
+  font-variant-numeric: tabular-nums;
+  transform: translateY(-50%);
+}
+
+.kal-spalte {
+  position: relative;
+  min-width: 0;
+  border-left: 1px solid var(--linie);
+  /* feine Linie zu jeder vollen Stunde */
+  background-image: repeating-linear-gradient(to bottom,
+    var(--linie) 0, var(--linie) 1px, transparent 1px, transparent var(--kal-stunde));
+  cursor: pointer;
+}
+
+.kal-spalte.heute {
+  background-color: color-mix(in srgb, var(--akzent) 5%, transparent);
+}
+
+.kal-termin {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  overflow: hidden;
+  padding: 3px 6px;
+  border: 0;
+  border-left: 3px solid var(--kat);
+  border-radius: 7px;
+  background: color-mix(in srgb, var(--kat) 20%, var(--flaeche));
+  color: var(--text);
+  font-size: 0.75rem;
+  line-height: 1.25;
+  text-align: left;
+  cursor: pointer;
+  transition: filter var(--dauer-kurz) ease;
+}
+
+.kal-termin:hover {
+  filter: brightness(0.97);
+}
+
+.kal-termin strong {
+  display: -webkit-box;
+  overflow: hidden;
+  font-weight: 600;
+  hyphens: auto; /* lange Wörter mit Bindestrich trennen statt Buchstaben zerhacken */
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+.kal-termin small {
+  color: var(--text-2);
+  font-size: 0.6875rem;
+  white-space: nowrap;
+}
+
+.kal-termin.kurz {
+  flex-direction: row;
+  align-items: center;
+  gap: 4px;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+.kal-termin.kurz strong {
+  -webkit-line-clamp: 1;
+}
+
+/* Woche am Handy: schmale Spalten → kleinere Schrift, Wörter nicht zerhacken */
+@media (max-width: 699px) {
+  .kal-raster.woche {
+    --zeitspalte: 38px;
+  }
+
+  .kal-raster.woche .kal-termin {
+    padding: 2px 3px;
+    border-left-width: 2px;
+    border-radius: 5px;
+    font-size: 0.625rem;
+    line-height: 1.2;
+  }
+
+  .kal-raster.woche .kal-termin strong {
+    overflow-wrap: normal;
+    word-break: normal;
+    hyphens: auto;
+    -webkit-line-clamp: 4;
+  }
+
+  .kal-raster.woche .kal-termin small {
+    display: none;
+  }
+
+  .kal-raster.woche .kal-ganz-termin {
+    padding: 2px 3px;
+    font-size: 0.5625rem;
+  }
+
+  .kal-raster.woche .kal-ganz-name {
+    font-size: 0.5rem;
+  }
+}
+
+/* Strich für die aktuelle Uhrzeit */
+.kal-jetzt {
+  position: absolute;
+  left: 0;
+  right: 0;
+  z-index: 2;
+  height: 2px;
+  background: var(--jetzt-linie);
+  pointer-events: none;
+}
+
+.kal-jetzt::before {
+  content: '';
+  position: absolute;
+  top: -4px;
+  left: -5px;
+  width: 10px;
+  height: 10px;
+  border-radius: var(--rundung-voll);
+  background: var(--jetzt-linie);
+}
+
+.kal-stunden .kal-jetzt-zeit {
+  z-index: 3;
+  padding: 0 2px;
+  border-radius: 4px;
+  background: var(--flaeche);
+  color: var(--jetzt-linie);
+  font-weight: 700;
+}
+
+/* Neu angelegter Termin leuchtet kurz auf */
+.kal-neu {
+  animation: kal-neu 1.4s var(--kurve);
+}
+
+@keyframes kal-neu {
+  0%, 40% { box-shadow: 0 0 0 3px color-mix(in srgb, var(--kat, var(--akzent)) 45%, transparent); }
+  100% { box-shadow: 0 0 0 3px transparent; }
+}
+
+/* -- Detailansicht -- */
+.kal-detail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--abstand-l);
+}
+
+.kal-detail-kopf {
+  display: flex;
+  gap: var(--abstand-m);
+}
+
+.kal-detail-kopf h3 {
+  margin: 0 0 var(--abstand-xs);
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.kal-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 10px 2px 8px;
+  border-radius: var(--rundung-voll);
+  background: color-mix(in srgb, var(--kat) var(--toenung), transparent);
+  color: var(--text);
+  font-size: var(--schrift-klein);
+  font-weight: 500;
+}
+
+.kal-chip i,
+.kal-wahl i {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--rundung-voll);
+  background: var(--kat);
+}
+
+.kal-detail-liste {
+  display: flex;
+  flex-direction: column;
+  gap: var(--abstand-m);
+  margin: 0;
+  padding: var(--abstand-l);
+  border-radius: var(--rundung);
+  background: var(--flaeche-2);
+  list-style: none;
+}
+
+.kal-detail-liste li {
+  display: flex;
+  gap: var(--abstand-m);
+  line-height: 1.4;
+}
+
+.kal-detail-liste svg {
+  width: 18px;
+  height: 18px;
+  margin-top: 1px;
+  color: var(--text-3);
+  flex-shrink: 0;
+}
+
+.kal-detail-liste small {
+  color: var(--text-2);
+}
+
+.kal-notiz {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.kal-detail-knoepfe .knopf:last-child {
+  flex: 1;
+}
+
+.kal-detail-knoepfe .knopf.zweit {
+  padding: 0 var(--abstand-l);
+}
+
+/* Schmale Handys: „Löschen“ und „Duplizieren“ nur als Symbol */
+@media (max-width: 480px) {
+  .kal-detail-knoepfe .knopf:not(:last-child) {
+    padding: 0 var(--abstand-m);
+  }
+
+  .kal-detail-knoepfe .knopf:not(:last-child) span {
+    display: none;
+  }
+}
+
+/* -- Formular -- */
+.kal-datumzeit {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  gap: var(--abstand-s);
+}
+
+.kal-datumzeit .eingabe[hidden] {
+  display: none;
+}
+
+.kal-datumzeit .eingabe:only-child,
+.kal-datumzeit:has(.eingabe[hidden]) {
+  grid-template-columns: 1fr;
+}
+
+.kal-formular .feld > .wochentage,
+.kal-formular .feld > .feld {
+  margin-top: var(--abstand-xs);
+}
+
+.kal-kalenderwahl {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--abstand-s);
+}
+
+.kal-wahl {
+  position: relative;
+  cursor: pointer;
+}
+
+.kal-wahl input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.kal-wahl span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 38px;
+  padding: 0 14px 0 12px;
+  border-radius: var(--rundung-voll);
+  background: var(--flaeche-2);
+  color: var(--text-2);
+  font-size: var(--schrift-klein);
+  font-weight: 500;
+  transition: background-color var(--dauer-kurz) ease, color var(--dauer-kurz) ease;
+}
+
+.kal-wahl input:checked + span {
+  background: color-mix(in srgb, var(--kat) 22%, transparent);
+  color: var(--text);
+  box-shadow: inset 0 0 0 1.5px var(--kat);
+}
+
+.kal-wahl input:focus-visible + span {
+  outline: 2px solid var(--text);
+  outline-offset: 2px;
+}
+
+/* Rückfrage „Nur dieser / Alle“ */
+.kal-frage-knoepfe {
+  display: flex;
+  flex-direction: column;
+  gap: var(--abstand-s);
+}
+
+/* Breitere Bildschirme: im Monat kurze Einträge statt Punkte, Jahr mit mehr Spalten */
+@media (min-width: 700px) {
+  .kal-tag {
+    align-items: stretch;
+    min-height: 96px;
+    padding: 4px;
+  }
+
+  .kal-tag-nr {
+    width: 26px;
+    height: 26px;
+    font-size: var(--schrift-klein);
+  }
+
+  .kal-punkte {
+    display: none;
+  }
+
+  .kal-eintraege {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  .kal-kurz {
+    overflow: hidden;
+    padding: 1px 5px;
+    border-left: 2px solid var(--kat);
+    border-radius: 4px;
+    background: color-mix(in srgb, var(--kat) 14%, transparent);
+    color: var(--text);
+    font-size: 0.6875rem;
+    line-height: 1.45;
+    text-align: left;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .kal-kurz b {
+    margin-right: 4px;
+    color: var(--text-2);
+    font-weight: 500;
+  }
+
+  .kal-kurz.ganz {
+    background: color-mix(in srgb, var(--kat) 24%, transparent);
+    font-weight: 600;
+  }
+
+  .kal-mehr {
+    padding-left: 5px;
+    color: var(--text-3);
+    font-size: 0.625rem;
+    text-align: left;
+  }
+
+  .kal-jahr {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .kal-raster {
+    --zeitspalte: 54px;
+  }
+
+  .kal-stunden span {
+    font-size: 0.6875rem;
+  }
+}
+
+@media (min-width: 1100px) {
+  .kal-jahr {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
 /* ---- Einstellungen: Daten & Installieren ---- */
 .aktionen-liste {
   display: flex;
@@ -2066,18 +2992,26 @@ button.heute-haupt {
   to   { opacity: 1; transform: translate(-50%, 0); }
 }
 
-/* Fünf Navigationspunkte am Handy: Beschriftung etwas kleiner, damit zwischen
-   "Gewohnheiten" und "Einstellungen" Luft bleibt */
-@media (max-width: 420px) {
+/* Sechs Navigationspunkte am Handy: Für alle Beschriftungen ist zu wenig Platz.
+   Deshalb nur Symbole – die Beschriftung erscheint nur beim gerade aktiven Punkt
+   (die anderen behalten ihren Platz, damit alle Symbole auf einer Höhe bleiben). */
+@media (max-width: 520px) {
   .navi-punkt {
+    min-width: 0;
     font-size: 0.625rem;
   }
-}
 
-@media (max-width: 350px) {
-  .navi-punkt {
-    font-size: 0.5625rem;
-    letter-spacing: -0.01em;
+  .navi-text {
+    white-space: nowrap;
+    visibility: hidden;
+  }
+
+  .navi-punkt.aktiv .navi-text {
+    visibility: visible;
+  }
+
+  .navi-icon {
+    width: 46px;
   }
 }
 

@@ -43,6 +43,8 @@
   <script src="wisdom-page.js"></script> <!-- Seite "Weisheit" -->
   <script src="calendar-parser.js"></script> <!-- Kalender: Termine aus einem Satz erkennen -->
   <script src="calendar-data.js"></script>   <!-- Kalender: Termine, Projekte, Kalender -->
+  <script src="calendar-page.js"></script>   <!-- Seite "Kalender": Ansichten Tag/Woche/Monat/Jahr -->
+  <script src="calendar-forms.js"></script>  <!-- Kalender: Detailansicht & Formular -->
   <script src="settings.js"></script> <!-- Seite "Einstellungen" -->
 </head>
 <body>
@@ -57,6 +59,10 @@
       <a class="navi-punkt" href="#heute" data-seite="heute">
         <span class="navi-icon"><i data-lucide="sun"></i></span>
         <span class="navi-text">Heute</span>
+      </a>
+      <a class="navi-punkt" href="#kalender" data-seite="kalender">
+        <span class="navi-icon"><i data-lucide="calendar-days"></i></span>
+        <span class="navi-text">Kalender</span>
       </a>
       <a class="navi-punkt" href="#weisheit" data-seite="weisheit">
         <span class="navi-icon"><i data-lucide="scroll-text"></i></span>
@@ -76,9 +82,10 @@
       </a>
     </nav>
 
-    <!-- Hier erscheinen die fünf Seiten. Immer nur eine ist sichtbar. -->
+    <!-- Hier erscheinen die sechs Seiten. Immer nur eine ist sichtbar. -->
     <main class="inhalt">
       <section class="seite" id="seite-heute" data-seite="heute"></section>
+      <section class="seite" id="seite-kalender" data-seite="kalender" hidden></section>
       <section class="seite" id="seite-weisheit" data-seite="weisheit" hidden></section>
       <section class="seite" id="seite-statistik" data-seite="statistik" hidden></section>
       <section class="seite" id="seite-gewohnheiten" data-seite="gewohnheiten" hidden></section>
